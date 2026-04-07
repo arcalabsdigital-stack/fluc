@@ -21,6 +21,13 @@ export function Header() {
     profile?.avatar_url ||
     `https://img.usecurling.com/ppl/medium?gender=male&seed=${user?.id}`
 
+  const getOrgName = () => {
+    const org = profile?.organizations as any
+    if (!org) return 'Workspace'
+    return Array.isArray(org) ? org[0]?.name : org.name
+  }
+  const orgName = getOrgName()
+
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
@@ -60,8 +67,12 @@ export function Header() {
         <div className="flex items-center gap-3 pl-2">
           <div className="text-right hidden sm:block">
             <div className="text-sm font-bold text-gray-900">{userName}</div>
-            <div className="text-xs text-gray-500 capitalize">
-              {profile?.role || 'Membro'}
+            <div className="text-xs text-gray-500 capitalize flex items-center justify-end gap-1">
+              <span>{profile?.role || 'Membro'}</span>
+              <span>•</span>
+              <span className="truncate max-w-[120px] font-medium">
+                {orgName}
+              </span>
             </div>
           </div>
 
@@ -96,6 +107,9 @@ export function Header() {
                     </span>
                     <span className="text-xs text-gray-500 truncate">
                       {user?.email}
+                    </span>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider truncate mt-1">
+                      {orgName}
                     </span>
                   </div>
                 </div>

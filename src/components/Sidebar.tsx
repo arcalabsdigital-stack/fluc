@@ -55,8 +55,15 @@ const SidebarItem = ({
 export function Sidebar() {
   const location = useLocation()
   const pathname = location.pathname
-  const { signOut, role } = useAuth()
+  const { signOut, role, profile } = useAuth()
   const navigate = useNavigate()
+
+  const getOrgName = () => {
+    const org = profile?.organizations as any
+    if (!org) return 'Carregando...'
+    return Array.isArray(org) ? org[0]?.name : org.name
+  }
+  const orgName = getOrgName()
 
   const handleLogout = async () => {
     try {
@@ -83,14 +90,26 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[#F8F9FB] border-r border-gray-100 p-6 flex flex-col z-40 hidden md:flex">
-      {/* Brand */}
-      <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center font-bold text-xl font-display">
-          F
+      {/* Brand & Workspace */}
+      <div className="flex flex-col mb-10 px-2 gap-2">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center font-bold text-xl font-display">
+            F
+          </div>
+          <span className="text-2xl font-bold text-gray-900 tracking-tight">
+            Fluc
+          </span>
         </div>
-        <span className="text-2xl font-bold text-gray-900 tracking-tight">
-          Fluc
-        </span>
+        {profile && (
+          <div className="px-1 mt-2 bg-white/50 rounded-lg py-2 border border-gray-100">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">
+              Workspace
+            </span>
+            <span className="text-sm font-semibold text-gray-800 truncate block">
+              {orgName}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Menu */}
