@@ -15,12 +15,34 @@ export type Database = {
   }
   public: {
     Tables: {
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          organization_id: string
           role: string
           updated_at: string | null
         }
@@ -29,6 +51,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          organization_id: string
           role?: string
           updated_at?: string | null
         }
@@ -37,10 +60,19 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          organization_id?: string
           role?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -51,6 +83,7 @@ export type Database = {
           description: string
           id: string
           notes: string | null
+          organization_id: string
           payment_method: string
           type: string
           updated_at: string | null
@@ -64,6 +97,7 @@ export type Database = {
           description: string
           id?: string
           notes?: string | null
+          organization_id: string
           payment_method: string
           type: string
           updated_at?: string | null
@@ -77,18 +111,28 @@ export type Database = {
           description?: string
           id?: string
           notes?: string | null
+          organization_id?: string
           payment_method?: string
           type?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'transactions_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_current_user_org_id: { Args: never; Returns: string }
       get_dashboard_kpi: { Args: { p_date_now: string }; Returns: Json }
       get_latest_transaction_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
@@ -236,6 +280,11 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: organizations
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
+//   updated_at: timestamp with time zone (not null, default: now())
 // Table: profiles
 //   id: uuid (not null)
 //   full_name: text (nullable)
@@ -243,6 +292,7 @@ export const Constants = {
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   role: text (not null, default: 'visitante'::text)
 //   avatar_url: text (nullable)
+//   organization_id: uuid (not null)
 // Table: transactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -255,55 +305,52 @@ export const Constants = {
 //   notes: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   organization_id: uuid (not null)
 
 // --- CONSTRAINTS ---
+// Table: organizations
+//   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
 // Table: profiles
 //   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id)
+//   FOREIGN KEY profiles_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
 //   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
 //   CHECK profiles_role_check: CHECK ((role = ANY (ARRAY['admin'::text, 'colaborador'::text, 'visitante'::text])))
 // Table: transactions
+//   FOREIGN KEY transactions_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
 //   PRIMARY KEY transactions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: organizations
+//   Policy "Users can view their own organization" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (id = get_current_user_org_id())
 // Table: profiles
-//   Policy "Admins can update all profiles" (UPDATE, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Admins can view all profiles" (SELECT, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Users can insert their own profile" (INSERT, PERMISSIVE) roles={public}
-//     WITH CHECK: (auth.uid() = id)
-//   Policy "Users can update own profile" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
-//   Policy "Users can update their own profile" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
-//   Policy "Users can view own profile" (SELECT, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
-//   Policy "Users can view their own profile" (SELECT, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
+//   Policy "Admins can update profiles in their organization" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() AND (organization_id = get_current_user_org_id()))
+//   Policy "Users can update their own profile" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (id = auth.uid())
+//   Policy "Users can view profiles in their organization" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (organization_id = get_current_user_org_id())
 // Table: transactions
-//   Policy "Admins and users can insert transactions" (INSERT, PERMISSIVE) roles={public}
-//     WITH CHECK: (is_admin() OR (auth.uid() = user_id))
-//   Policy "Admins can delete all transactions" (DELETE, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Admins can update all transactions" (UPDATE, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Admins can view all transactions" (SELECT, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Collaborators can view latest transaction" (SELECT, PERMISSIVE) roles={public}
-//     USING: ((get_user_role() = 'colaborador'::text) AND (id = get_latest_transaction_id()))
-//   Policy "Standard users can view own transactions" (SELECT, PERMISSIVE) roles={public}
-//     USING: ((COALESCE(get_user_role(), 'visitante'::text) <> ALL (ARRAY['admin'::text, 'colaborador'::text])) AND (user_id = auth.uid()))
-//   Policy "Users can delete own transactions" (DELETE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
-//   Policy "Users can delete their own transactions" (DELETE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
-//   Policy "Users can update own transactions" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
-//   Policy "Users can update their own transactions" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
+//   Policy "Users can delete transactions in their org" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (organization_id = get_current_user_org_id())
+//   Policy "Users can insert transactions in their org" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (organization_id = get_current_user_org_id())
+//   Policy "Users can update transactions in their org" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (organization_id = get_current_user_org_id())
+//   Policy "Users view transactions in their org" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (organization_id = get_current_user_org_id())
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION get_current_user_org_id()
+//   CREATE OR REPLACE FUNCTION public.get_current_user_org_id()
+//    RETURNS uuid
+//    LANGUAGE sql
+//    SECURITY DEFINER
+//   AS $function$
+//     SELECT organization_id FROM public.profiles WHERE id = auth.uid();
+//   $function$
+//
 // FUNCTION get_dashboard_kpi(date)
 //   CREATE OR REPLACE FUNCTION public.get_dashboard_kpi(p_date_now date)
 //    RETURNS json
@@ -395,15 +442,39 @@ export const Constants = {
 //    LANGUAGE plpgsql
 //    SECURITY DEFINER
 //   AS $function$
+//   DECLARE
+//     org_id UUID;
+//     org_name TEXT;
+//     new_role TEXT;
 //   BEGIN
-//     INSERT INTO public.profiles (id, full_name, role)
+//     org_name := NEW.raw_user_meta_data->>'organization_name';
+//
+//     IF org_name IS NOT NULL THEN
+//       INSERT INTO public.organizations (name) VALUES (org_name) RETURNING id INTO org_id;
+//       new_role := 'admin';
+//     ELSE
+//       org_id := (NEW.raw_user_meta_data->>'organization_id')::UUID;
+//       new_role := COALESCE(NEW.raw_user_meta_data->>'role', 'visitante');
+//
+//       IF org_id IS NULL THEN
+//          SELECT id INTO org_id FROM public.organizations LIMIT 1;
+//          IF org_id IS NULL THEN
+//            INSERT INTO public.organizations (name) VALUES ('Organização Padrão') RETURNING id INTO org_id;
+//          END IF;
+//          new_role := 'visitante';
+//       END IF;
+//     END IF;
+//
+//     INSERT INTO public.profiles (id, full_name, role, organization_id)
 //     VALUES (
-//       new.id,
-//       new.raw_user_meta_data->>'full_name',
-//       'visitante'
+//       NEW.id,
+//       NEW.raw_user_meta_data->>'full_name',
+//       new_role,
+//       org_id
 //     )
 //     ON CONFLICT (id) DO NOTHING;
-//     RETURN new;
+//
+//     RETURN NEW;
 //   END;
 //   $function$
 //
@@ -421,6 +492,24 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION set_transaction_org_id()
+//   CREATE OR REPLACE FUNCTION public.set_transaction_org_id()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     IF NEW.organization_id IS NULL THEN
+//       NEW.organization_id := public.get_current_user_org_id();
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
+
+// --- TRIGGERS ---
+// Table: transactions
+//   set_transaction_org_id_trigger: CREATE TRIGGER set_transaction_org_id_trigger BEFORE INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION set_transaction_org_id()
 
 // --- INDEXES ---
 // Table: transactions
