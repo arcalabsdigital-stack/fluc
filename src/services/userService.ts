@@ -20,4 +20,13 @@ export const userService = {
 
     if (error) throw error
   },
+
+  async inviteUser(email: string, fullName: string, role: Role): Promise<void> {
+    const { data, error } = await supabase.functions.invoke('invite-user', {
+      body: { email, fullName, role },
+    })
+
+    if (error) throw error
+    if (data?.error) throw new Error(data.error)
+  },
 }

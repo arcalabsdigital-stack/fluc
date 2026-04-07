@@ -17,6 +17,7 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           full_name: string | null
           id: string
@@ -24,6 +25,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
@@ -31,6 +33,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
@@ -239,6 +242,7 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   role: text (not null, default: 'visitante'::text)
+//   avatar_url: text (nullable)
 // Table: transactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)

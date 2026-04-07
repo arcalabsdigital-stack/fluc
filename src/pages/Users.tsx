@@ -22,9 +22,17 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export default function Users() {
   const { role, user: currentUser } = useAuth()
+  const [isInviting, setIsInviting] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteName, setInviteName] = useState('')
+  const [inviteRole, setInviteRole] = useState<Role>('colaborador')
+  const [showInviteForm, setShowInviteForm] = useState(false)
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -59,20 +67,97 @@ export default function Users() {
     }
   }
 
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteEmail || !inviteName) {
+      toast.error('Preencha todos os campos')
+      return
+    }
+    setIsInviting(true)
+    try {
+      await userService.inviteUser(inviteEmail, inviteName, inviteRole)
+      toast.success('Convite enviado com sucesso!')
+      setShowInviteForm(false)
+      setInviteEmail('')
+      setInviteName('')
+      setInviteRole('colaborador')
+      const data = await userService.getAllUsers()
+      setUsers(data)
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao enviar convite')
+    } finally {
+      setIsInviting(false)
+    }
+  }
+
   if (role !== 'admin') {
     return <AccessDenied />
   }
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in pb-10">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Gerenciamento de Usuários
-        </h1>
-        <p className="text-gray-500">
-          Gerencie o acesso e permissões dos usuários do sistema.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Gerenciamento de Usuários
+          </h1>
+          <p className="text-gray-500">
+            Gerencie o acesso e permissões dos usuários da sua organização.
+          </p>
+        </div>
+        <Button onClick={() => setShowInviteForm(!showInviteForm)}>
+          {showInviteForm ? 'Cancelar' : 'Convidar Usuário'}
+        </Button>
       </div>
+
+      {showInviteForm && (
+        <div className="bg-white p-6 rounded-xl border shadow-sm animate-fade-in-up">
+          <h2 className="text-lg font-semibold mb-4">Novo Convite</h2>
+          <form
+            onSubmit={handleInvite}
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="inviteName">Nome Completo</Label>
+              <Input
+                id="inviteName"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="inviteEmail">E-mail</Label>
+              <Input
+                id="inviteEmail"
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="inviteRole">Função</Label>
+              <Select
+                value={inviteRole}
+                onValueChange={(val) => setInviteRole(val as Role)}
+              >
+                <SelectTrigger id="inviteRole">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="colaborador">Colaborador</SelectItem>
+                  <SelectItem value="visitante">Visitante</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" disabled={isInviting}>
+              {isInviting ? 'Enviando...' : 'Enviar Convite'}
+            </Button>
+          </form>
+        </div>
+      )}
 
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         {loading ? (

@@ -83,6 +83,14 @@ export interface UserProfile {
   id: string
   full_name: string | null
   role: Role
+  organization_id?: string
   created_at?: string | null
   updated_at?: string | null
+}
+
+export interface Organization {
+  id: string
+  name: string
+  created_at: string
+  updated_at: string
 }

@@ -18,6 +18,7 @@ import { emailService } from '@/services/emailService'
 
 export default function SignUp() {
   const [fullName, setFullName] = useState('')
+  const [organizationName, setOrganizationName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -38,10 +39,20 @@ export default function SignUp() {
       return
     }
 
+    if (!organizationName.trim()) {
+      toast.error('O nome da empresa é obrigatório.')
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const { error } = await signUp(email, password, fullName)
+      const { error } = await signUp(
+        email,
+        password,
+        fullName,
+        organizationName,
+      )
       if (error) {
         toast.error(error.message || 'Erro ao criar conta.')
       } else {
@@ -83,6 +94,16 @@ export default function SignUp() {
                 placeholder="Seu nome"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="organization">Nome da Empresa</Label>
+              <Input
+                id="organization"
+                placeholder="Sua empresa"
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
                 required
               />
             </div>
