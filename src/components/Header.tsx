@@ -1,16 +1,33 @@
-import { Search, Bell, FileText } from 'lucide-react'
+import { Search, Bell, FileText, UserIcon, LogOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { useNavigate } from 'react-router-dom'
 
 export function Header() {
-  const { user } = useAuth()
-  const userName = user?.user_metadata?.full_name || 'Usuário'
+  const { user, profile, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const userName =
+    profile?.full_name || user?.user_metadata?.full_name || 'Usuário'
   const userInitials = userName.substring(0, 2).toUpperCase()
+  const avatarUrl =
+    profile?.avatar_url ||
+    `https://img.usecurling.com/ppl/medium?gender=male&seed=${user?.id}`
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login')
+  }
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-[#F8F9FB]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+    <header className="sticky top-0 z-30 w-full bg-[#F8F9FB]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-gray-100">
       <div className="flex-1 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -43,15 +60,65 @@ export function Header() {
         <div className="flex items-center gap-3 pl-2">
           <div className="text-right hidden sm:block">
             <div className="text-sm font-bold text-gray-900">{userName}</div>
-            <div className="text-xs text-gray-500">Membro</div>
+            <div className="text-xs text-gray-500 capitalize">
+              {profile?.role || 'Membro'}
+            </div>
           </div>
-          <Avatar className="h-10 w-10 border-2 border-white shadow-sm cursor-pointer">
-            <AvatarImage
-              src={`https://img.usecurling.com/ppl/medium?gender=male&seed=${user?.id}`}
-              alt={userName}
-            />
-            <AvatarFallback>{userInitials}</AvatarFallback>
-          </Avatar>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Avatar className="h-10 w-10 border-2 border-white shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
+                <AvatarImage
+                  src={avatarUrl}
+                  alt={userName}
+                  className="object-cover"
+                />
+                <AvatarFallback>{userInitials}</AvatarFallback>
+              </Avatar>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-56 p-2 rounded-xl border border-gray-100 shadow-lg"
+            >
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-3 p-2 mb-1">
+                  <Avatar className="h-9 w-9 border border-gray-100">
+                    <AvatarImage
+                      src={avatarUrl}
+                      alt={userName}
+                      className="object-cover"
+                    />
+                    <AvatarFallback>{userInitials}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-sm font-medium truncate text-gray-900">
+                      {userName}
+                    </span>
+                    <span className="text-xs text-gray-500 truncate">
+                      {user?.email}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-px bg-gray-100 my-1" />
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-sm h-9 font-medium text-gray-700"
+                  onClick={() => navigate('/settings')}
+                >
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  Meu Perfil
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-sm h-9 font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </header>

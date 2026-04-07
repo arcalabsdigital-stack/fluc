@@ -1,13 +1,304 @@
+import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { toast } from 'sonner'
+import { Camera, Loader2, Save, User, Lock, Mail } from 'lucide-react'
+
 const Settings = () => {
+  const { user, profile, updateProfileContext } = useAuth()
+  const [fullName, setFullName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (profile?.full_name) {
+      setFullName(profile.full_name)
+    }
+  }, [profile])
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file || !user) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 2MB')
+      return
+    }
+
+    try {
+      setIsUploading(true)
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
+
+      const avatarUrl = data.publicUrl
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', user.id)
+
+      if (updateError) throw updateError
+
+      updateProfileContext({ avatar_url: avatarUrl })
+      toast.success('Foto de perfil atualizada com sucesso!')
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error)
+      toast.error(error.message || 'Erro ao fazer upload da imagem')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    if (password && password !== confirmPassword) {
+      toast.error('As senhas não coincidem')
+      return
+    }
+
+    try {
+      setIsSaving(true)
+
+      // Update name in profiles
+      if (fullName !== profile?.full_name) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ full_name: fullName })
+          .eq('id', user.id)
+
+        if (profileError) throw profileError
+        updateProfileContext({ full_name: fullName })
+      }
+
+      // Update name in auth metadata
+      if (fullName !== user.user_metadata?.full_name) {
+        await supabase.auth.updateUser({
+          data: { full_name: fullName },
+        })
+      }
+
+      // Update password
+      if (password) {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: password,
+        })
+
+        if (passwordError) throw passwordError
+        setPassword('')
+        setConfirmPassword('')
+        toast.success('Senha atualizada com sucesso!')
+      }
+
+      toast.success('Perfil salvo com sucesso!')
+    } catch (error: any) {
+      console.error('Error updating profile:', error)
+      toast.error(error.message || 'Erro ao salvar o perfil')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const userInitials = (profile?.full_name || user?.email || 'U')
+    .substring(0, 2)
+    .toUpperCase()
+  const avatarUrl =
+    profile?.avatar_url ||
+    `https://img.usecurling.com/ppl/medium?gender=male&seed=${user?.id}`
+
   return (
-    <div className="flex flex-col items-center justify-center h-[50vh] animate-fade-in">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">
-        Página de Configurações
-      </h1>
-      <p className="text-gray-500">
-        As configurações do aplicativo seriam exibidas aqui.
-      </p>
+    <div className="max-w-4xl mx-auto py-8 px-4 animate-fade-in-up">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">
+          Configurações de Perfil
+        </h1>
+        <p className="text-gray-500 mt-1">
+          Gerencie suas informações pessoais e segurança da conta.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6 sm:p-8">
+          <form onSubmit={handleSaveProfile} className="space-y-8">
+            {/* Avatar Section */}
+            <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
+              <div
+                className="relative group cursor-pointer"
+                onClick={handleAvatarClick}
+              >
+                <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                  <AvatarImage
+                    src={avatarUrl}
+                    alt={profile?.full_name || ''}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="text-2xl">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isUploading ? (
+                    <Loader2 className="h-6 w-6 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-6 w-6 text-white" />
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/jpeg, image/png, image/webp"
+                  className="hidden"
+                />
+              </div>
+              <div className="text-center sm:text-left">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Foto de Perfil
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Clique na imagem para alterar. Recomendado formato quadrado,
+                  máx. 2MB.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Personal Info Section */}
+              <div className="space-y-5">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Informações Pessoais
+                </h3>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="email"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="pl-9 bg-gray-50 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    O email não pode ser alterado por aqui.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="fullName"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Nome Completo
+                  </label>
+                  <Input
+                    id="fullName"
+                    placeholder="Seu nome"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Security Section */}
+              <div className="space-y-5">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-primary" />
+                  Segurança
+                </h3>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Nova Senha
+                  </label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Deixe em branco para não alterar"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Confirmar Nova Senha
+                  </label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirme a nova senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={!password}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-gray-100 flex justify-end">
+              <Button
+                type="submit"
+                disabled={isSaving || isUploading}
+                className="min-w-[140px] shadow-sm rounded-full"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Salvar Alterações
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   )
 }
+
 export default Settings

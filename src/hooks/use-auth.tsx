@@ -10,10 +10,21 @@ import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 import { Role } from '@/lib/types'
 
+export interface UserProfile {
+  id: string
+  full_name: string | null
+  avatar_url: string | null
+  role: Role
+  created_at: string | null
+  updated_at: string | null
+}
+
 interface AuthContextType {
   user: User | null
   session: Session | null
   role: Role | null
+  profile: UserProfile | null
+  updateProfileContext: (updates: Partial<UserProfile>) => void
   signUp: (
     email: string,
     password: string,
@@ -38,42 +49,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [role, setRole] = useState<Role | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const userIdRef = useRef<string | null>(null)
 
-  const fetchRole = async (userId: string): Promise<Role> => {
+  const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', userId)
         .single()
 
       if (error || !data) {
-        console.warn('Error fetching role, defaulting to visitante:', error)
-        return 'visitante'
+        console.warn('Error fetching profile:', error)
+        return null
       }
-      return (data.role as Role) || 'visitante'
+      return data as UserProfile
     } catch (error) {
-      console.error('Exception fetching role:', error)
-      return 'visitante'
+      console.error('Exception fetching profile:', error)
+      return null
     }
   }
 
-  // Effect for fetching role when user changes
+  // Effect for fetching profile when user changes
   useEffect(() => {
     let mounted = true
 
-    const getRole = async () => {
+    const getProfileData = async () => {
       if (!user) return
 
       try {
-        const userRole = await fetchRole(user.id)
+        const userProfile = await fetchProfile(user.id)
         if (mounted) {
-          setRole(userRole)
+          if (userProfile) {
+            setProfile(userProfile)
+            setRole(userProfile.role)
+          } else {
+            setRole('visitante' as Role)
+          }
         }
       } catch (error) {
-        console.error('Error in getRole:', error)
+        console.error('Error in getProfileData:', error)
       } finally {
         if (mounted) {
           setLoading(false)
@@ -82,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (user?.id) {
-      getRole()
+      getProfileData()
     } else {
       // If no user, ensure loading is false
       setLoading(false)
@@ -91,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       mounted = false
     }
-  }, [user?.id]) // Depend only on user ID to avoid unnecessary re-fetches
+  }, [user?.id])
 
   useEffect(() => {
     let mounted = true
@@ -105,13 +122,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session)
       const newUser = session?.user ?? null
 
-      // If we have a new user (different ID), we should show loading until role is fetched
+      // If we have a new user (different ID), we should show loading until profile is fetched
       if (newUser && newUser.id !== userIdRef.current) {
         setLoading(true)
         userIdRef.current = newUser.id
       } else if (!newUser) {
         // If logged out, clear everything
         setRole(null)
+        setProfile(null)
         setLoading(false)
         userIdRef.current = null
       }
@@ -127,7 +145,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const newUser = session?.user ?? null
 
       if (newUser) {
-        // Loading is true by default, so we just set the ref
         userIdRef.current = newUser.id
       } else {
         setLoading(false)
@@ -166,6 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signOut()
     if (!error) {
       setRole(null)
+      setProfile(null)
       setSession(null)
       setUser(null)
       userIdRef.current = null
@@ -173,10 +191,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
+  const updateProfileContext = (updates: Partial<UserProfile>) => {
+    setProfile((prev) => (prev ? { ...prev, ...updates } : null))
+  }
+
   const value = {
     user,
     session,
     role,
+    profile,
+    updateProfileContext,
     signUp,
     signIn,
     signOut,
