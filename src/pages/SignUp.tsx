@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,103 +11,73 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
-import { emailService } from '@/services/emailService'
+import { supabase } from '@/lib/supabase/client'
 
 export default function SignUp() {
-  const [fullName, setFullName] = useState('')
-  const [organizationName, setOrganizationName] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const { signUp } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (password !== confirmPassword) {
-      toast.error('As senhas não coincidem.')
-      return
-    }
-
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres.')
-      return
-    }
-
-    if (!organizationName.trim()) {
-      toast.error('O nome da empresa é obrigatório.')
-      return
-    }
-
-    setIsLoading(true)
+    setLoading(true)
 
     try {
-      const { error } = await signUp(
-        email,
-        password,
-        fullName,
-        organizationName,
-      )
+      const { error } = await signUp(email, password, name)
+
       if (error) {
-        toast.error(error.message || 'Erro ao criar conta.')
+        toast.error(error.message)
       } else {
-        // Send welcome email immediately after successful registration
         try {
-          await emailService.sendWelcomeEmail(email, fullName)
-        } catch (emailError) {
-          console.error('Failed to send welcome email:', emailError)
-          // We don't block the user flow if email fails, but we log it
+          // Send welcome email using edge function
+          await supabase.functions.invoke('welcome-email', {
+            body: { email, name },
+          })
+        } catch (err) {
+          console.error('Failed to send welcome email:', err)
         }
 
-        toast.success('Conta criada com sucesso! Verifique seu e-mail.')
+        toast.success('Conta criada com sucesso!')
         navigate('/login')
       }
-    } catch (error) {
-      toast.error('Ocorreu um erro inesperado.')
+    } catch (error: any) {
+      toast.error(error.message)
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] p-4">
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Criar Conta
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            Criar uma conta
           </CardTitle>
-          <CardDescription className="text-center">
-            Preencha os dados abaixo para começar
+          <CardDescription>
+            Insira seus dados abaixo para criar sua conta no Fluc
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo</Label>
+              <Label htmlFor="name">Nome completo</Label>
               <Input
                 id="name"
+                type="text"
                 placeholder="Seu nome"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="organization">Nome da Empresa</Label>
-              <Input
-                id="organization"
-                placeholder="Sua empresa"
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -128,31 +97,17 @@ export default function SignUp() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando conta...
-                </>
-              ) : (
-                'Cadastrar'
-              )}
+          <CardFooter className="flex flex-col space-y-4">
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Criando conta...' : 'Criar conta'}
             </Button>
-            <div className="text-sm text-center text-gray-500">
+            <div className="text-center text-sm text-muted-foreground">
               Já tem uma conta?{' '}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link
+                to="/login"
+                className="font-semibold text-primary hover:underline"
+              >
                 Entrar
               </Link>
             </div>
