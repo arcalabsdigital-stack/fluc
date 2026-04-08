@@ -40,7 +40,7 @@ const Help = () => {
             Central de Ajuda
           </h1>
           <p className="text-gray-500">
-            Aprenda a usar o Finova e tire suas dúvidas.
+            Aprenda a usar o Fluc e tire suas dúvidas.
           </p>
         </div>
         <Button variant="outline" asChild>
@@ -376,10 +376,10 @@ const Help = () => {
                     Email de Suporte
                   </p>
                   <a
-                    href="mailto:suporte@finova.com"
+                    href="mailto:arcalabs.digital@gmail.com"
                     className="text-blue-600 hover:underline font-bold"
                   >
-                    suporte@finova.com
+                    arcalabs.digital@gmail.com
                   </a>
                   <p className="text-xs text-blue-700 mt-1">
                     Tempo médio de resposta: 24 horas úteis.
