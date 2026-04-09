@@ -15,6 +15,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          grupo: string
+          id: string
+          nome: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          grupo: string
+          id?: string
+          nome: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          grupo?: string
+          id?: string
+          nome?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           created_at: string
@@ -280,6 +304,12 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: categories
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   tipo: text (not null)
+//   grupo: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: organizations
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -308,6 +338,10 @@ export const Constants = {
 //   organization_id: uuid (not null)
 
 // --- CONSTRAINTS ---
+// Table: categories
+//   UNIQUE categories_nome_tipo_unique: UNIQUE (nome, tipo)
+//   PRIMARY KEY categories_pkey: PRIMARY KEY (id)
+//   CHECK categories_tipo_check: CHECK ((tipo = ANY (ARRAY['Receita'::text, 'Despesa'::text])))
 // Table: organizations
 //   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
 // Table: profiles
@@ -321,6 +355,9 @@ export const Constants = {
 //   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: categories
+//   Policy "authenticated_select_categories" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: organizations
 //   Policy "Users can view their own organization" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (id = get_current_user_org_id())
@@ -542,5 +579,7 @@ export const Constants = {
 //   set_transaction_org_id_trigger: CREATE TRIGGER set_transaction_org_id_trigger BEFORE INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION set_transaction_org_id()
 
 // --- INDEXES ---
+// Table: categories
+//   CREATE UNIQUE INDEX categories_nome_tipo_unique ON public.categories USING btree (nome, tipo)
 // Table: transactions
 //   CREATE INDEX transactions_created_at_idx ON public.transactions USING btree (created_at DESC)
