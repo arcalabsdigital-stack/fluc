@@ -4,6 +4,8 @@ import { PerformanceChart } from '@/components/dashboard/PerformanceChart'
 import { CategoryDistributionChart } from '@/components/dashboard/CategoryDistribution'
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions'
 import { ExpenseDistribution } from '@/components/dashboard/ExpenseDistribution'
+import { BudgetsProgress } from '@/components/dashboard/BudgetsProgress'
+import { ComparativeChart } from '@/components/dashboard/ComparativeChart'
 import { KPIMetric } from '@/lib/types'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -120,6 +122,16 @@ const Index = () => {
           <PerformanceChart data={chartData} />
         </div>
         <div className="h-[400px] xl:h-full">
+          <BudgetsProgress />
+        </div>
+      </div>
+
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-auto min-h-[350px]">
+        <div className="h-[350px] xl:h-full xl:col-span-2">
+          <ComparativeChart />
+        </div>
+        <div className="h-[350px] xl:h-full">
           <CategoryDistributionChart data={categoryDistribution} />
         </div>
       </div>

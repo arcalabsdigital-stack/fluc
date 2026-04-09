@@ -4,8 +4,18 @@ import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
-import { Camera, Loader2, Save, User, Lock, Mail } from 'lucide-react'
+import {
+  Camera,
+  Loader2,
+  Save,
+  User,
+  Lock,
+  Mail,
+  RepeatIcon,
+} from 'lucide-react'
+import { RecurringTransactionsSettings } from '@/components/settings/RecurringTransactionsSettings'
 
 const Settings = () => {
   const { user, profile, updateProfileContext } = useAuth()
@@ -141,162 +151,187 @@ const Settings = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 sm:p-8">
-          <form onSubmit={handleSaveProfile} className="space-y-8">
-            {/* Avatar Section */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
-              <div
-                className="relative group cursor-pointer"
-                onClick={handleAvatarClick}
-              >
-                <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-                  <AvatarImage
-                    src={avatarUrl}
-                    alt={profile?.full_name || ''}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="text-2xl">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {isUploading ? (
-                    <Loader2 className="h-6 w-6 text-white animate-spin" />
-                  ) : (
-                    <Camera className="h-6 w-6 text-white" />
-                  )}
-                </div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/jpeg, image/png, image/webp"
-                  className="hidden"
-                />
-              </div>
-              <div className="text-center sm:text-left">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Foto de Perfil
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Clique na imagem para alterar. Recomendado formato quadrado,
-                  máx. 2MB.
-                </p>
-              </div>
-            </div>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="mb-6 bg-white border border-gray-100 h-14 p-1 shadow-sm rounded-xl">
+          <TabsTrigger
+            value="profile"
+            className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50"
+          >
+            <User className="w-4 h-4 mr-2" />
+            Perfil
+          </TabsTrigger>
+          <TabsTrigger
+            value="recurring"
+            className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50"
+          >
+            <RepeatIcon className="w-4 h-4 mr-2" />
+            Gastos Recorrentes
+          </TabsTrigger>
+        </TabsList>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Personal Info Section */}
-              <div className="space-y-5">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  Informações Pessoais
-                </h3>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="email"
-                    className="text-sm font-medium text-gray-700"
+        <TabsContent value="profile" className="animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 sm:p-8">
+              <form onSubmit={handleSaveProfile} className="space-y-8">
+                {/* Avatar Section */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
+                  <div
+                    className="relative group cursor-pointer"
+                    onClick={handleAvatarClick}
                   >
-                    Email
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="pl-9 bg-gray-50 text-gray-500 cursor-not-allowed"
+                    <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                      <AvatarImage
+                        src={avatarUrl}
+                        alt={profile?.full_name || ''}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="text-2xl">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      {isUploading ? (
+                        <Loader2 className="h-6 w-6 text-white animate-spin" />
+                      ) : (
+                        <Camera className="h-6 w-6 text-white" />
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/jpeg, image/png, image/webp"
+                      className="hidden"
                     />
                   </div>
-                  <p className="text-xs text-gray-500">
-                    O email não pode ser alterado por aqui.
-                  </p>
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Foto de Perfil
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Clique na imagem para alterar. Recomendado formato
+                      quadrado, máx. 2MB.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label
-                    htmlFor="fullName"
-                    className="text-sm font-medium text-gray-700"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Personal Info Section */}
+                  <div className="space-y-5">
+                    <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                      <User className="h-5 w-5 text-primary" />
+                      Informações Pessoais
+                    </h3>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="email"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Email
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="email"
+                          type="email"
+                          value={user?.email || ''}
+                          disabled
+                          className="pl-9 bg-gray-50 text-gray-500 cursor-not-allowed"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        O email não pode ser alterado por aqui.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="fullName"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Nome Completo
+                      </label>
+                      <Input
+                        id="fullName"
+                        placeholder="Seu nome"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Security Section */}
+                  <div className="space-y-5">
+                    <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                      <Lock className="h-5 w-5 text-primary" />
+                      Segurança
+                    </h3>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="password"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Nova Senha
+                      </label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Deixe em branco para não alterar"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="confirmPassword"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Confirmar Nova Senha
+                      </label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirme a nova senha"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={!password}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-gray-100 flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={isSaving || isUploading}
+                    className="min-w-[140px] shadow-sm rounded-full"
                   >
-                    Nome Completo
-                  </label>
-                  <Input
-                    id="fullName"
-                    placeholder="Seu nome"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Salvar Alterações
+                      </>
+                    )}
+                  </Button>
                 </div>
-              </div>
-
-              {/* Security Section */}
-              <div className="space-y-5">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-primary" />
-                  Segurança
-                </h3>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="password"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Nova Senha
-                  </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Deixe em branco para não alterar"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="confirmPassword"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Confirmar Nova Senha
-                  </label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirme a nova senha"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={!password}
-                  />
-                </div>
-              </div>
+              </form>
             </div>
+          </div>
+        </TabsContent>
 
-            <div className="pt-6 border-t border-gray-100 flex justify-end">
-              <Button
-                type="submit"
-                disabled={isSaving || isUploading}
-                className="min-w-[140px] shadow-sm rounded-full"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar Alterações
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
+        <TabsContent value="recurring" className="animate-fade-in">
+          <RecurringTransactionsSettings />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
