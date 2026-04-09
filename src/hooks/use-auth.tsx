@@ -14,7 +14,7 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    name: string,
+    fullName: string,
     organizationName: string,
   ) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (
     email: string,
     password: string,
-    name: string,
+    fullName: string,
     organizationName: string,
   ) => {
     const { error } = await supabase.auth.signUp({
@@ -63,8 +63,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       options: {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
-          full_name: name,
+          full_name: fullName,
           organization_name: organizationName,
+          company_name: organizationName,
         },
       },
     })

@@ -167,6 +167,9 @@ importers:
       zod:
         specifier: ^4.2.1
         version: 4.2.1
+      zustand:
+        specifier: 4.5.7
+        version: 4.5.7(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.2
@@ -454,21 +457,25 @@ packages:
     resolution: {integrity: sha512-aCPdoEUGsJGF9y88vDYoaugG4IEGwSBa+usyuAvEVl3vTfuTmE0RDQEC1Z+WnJ3J/cIEpbgKOzS12VwbzFicjg==}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@oxlint/linux-arm64-musl@1.34.0':
     resolution: {integrity: sha512-cMo72LQBFmdnVLRKLAHD94ZUBq5Z+aA9Y+RKzkjhCmJuef5ZAfKC24TJD/6c5LxGYzkwwmyySoQAHq5B69i3PQ==}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@oxlint/linux-x64-gnu@1.34.0':
     resolution: {integrity: sha512-+9xFhhkqgNIysEh+uHvcba8v4UtL1YzxuyDS2wTLdWrkGvIllCx5WjJItt3K/AhwatciksgNEXSo2Hh4fcQRog==}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@oxlint/linux-x64-musl@1.34.0':
     resolution: {integrity: sha512-qa7TL2DfEDdMeSP5UiU5JMs6D2PW7ZJAQ0WZYTgqDV8BlZ6nMkIYVBVIk3QPxIfkyxvfJVbG1RB3PkSWDcfwpA==}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@oxlint/win32-arm64@1.34.0':
     resolution: {integrity: sha512-mSJumUveg1S3DiOgvsrVNAGuvenBbbC/zsfT1qhltT+GLhJ7RPBK2I/jz0fTdE+I7M9/as8yc0XJ/eY23y2amA==}
@@ -1171,24 +1178,28 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.53':
     resolution: {integrity: sha512-bGe5EBB8FVjHBR1mOLOPEFg1Lp3//7geqWkU5NIhxe+yH0W8FVrQ6WRYOap4SUTKdklD/dC4qPLREkMMQ855FA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.53':
     resolution: {integrity: sha512-qL+63WKVQs1CMvFedlPt0U9PiEKJOAL/bsHMKUDS6Vp2Q+YAv/QLPu8rcvkfIMvQ0FPU2WL0aX4eWwF6e/GAnA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.53':
     resolution: {integrity: sha512-VGl9JIGjoJh3H8Mb+7xnVqODajBmrdOOb9lxWXdcmxyI+zjB2sux69br0hZJDTyLJfvBoYm439zPACYbCjGRmw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@rolldown/binding-openharmony-arm64@1.0.0-beta.53':
     resolution: {integrity: sha512-B4iIserJXuSnNzA5xBLFUIjTfhNy7d9sq4FUMQY3GhQWGVhS2RWWzzDnkSU6MUt7/aHUrep0CdQfXUJI9D3W7A==}
@@ -1903,24 +1914,28 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   lightningcss-linux-arm64-musl@1.30.2:
     resolution: {integrity: sha512-5Vh9dGeblpTxWHpOx8iauV02popZDsCYMPIgiuw97OJ5uaDsL86cnqSFs5LZkG3ghHoX5isLgWzMs+eD1YzrnA==}
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   lightningcss-linux-x64-gnu@1.30.2:
     resolution: {integrity: sha512-Cfd46gdmj1vQ+lR6VRTTadNHu6ALuw2pKR9lYq4FnhvgBc4zWY1EtZcAc6EffShbb1MFrIPfLDXD6Xprbnni4w==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   lightningcss-linux-x64-musl@1.30.2:
     resolution: {integrity: sha512-XJaLUUFXb6/QG2lGIW6aIk6jKdtjtcffUT0NKvIqhSBY3hh9Ch+1LCeH80dR9q9LBjG3ewbDjnumefsLsP6aiA==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   lightningcss-win32-arm64-msvc@1.30.2:
     resolution: {integrity: sha512-FZn+vaj7zLv//D/192WFFVA0RgHawIcHqLX9xuWiQt7P0PtdFEVaxgF9rjM/IRYHQXNnk61/H/gb2Ei+kUQ4xQ==}
@@ -2520,6 +2535,21 @@ packages:
 
   zod@4.2.1:
     resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
+
+  zustand@4.5.7:
+    resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
+    engines: {node: '>=12.7.0'}
+    peerDependencies:
+      '@types/react': '>=16.8'
+      immer: '>=9.0.6'
+      react: '>=16.8'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
 
 snapshots:
 
@@ -4787,3 +4817,10 @@ snapshots:
       zod: 4.2.1
 
   zod@4.2.1: {}
+
+  zustand@4.5.7(@types/react@19.2.7)(react@19.2.3):
+    dependencies:
+      use-sync-external-store: 1.6.0(react@19.2.3)
+    optionalDependencies:
+      '@types/react': 19.2.7
+      react: 19.2.3

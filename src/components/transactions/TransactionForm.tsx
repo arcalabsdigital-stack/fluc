@@ -38,8 +38,15 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select'
-import { Transacao, TipoTransacao, FormaPagamento } from '@/lib/types'
+import {
+  Transacao,
+  TipoTransacao,
+  FormaPagamento,
+  Categoria,
+} from '@/lib/types'
 import useTransactionStore from '@/stores/useTransactionStore'
 import { toast } from 'sonner'
 
@@ -92,6 +99,18 @@ export function TransactionForm({
       data: new Date(),
     },
   })
+
+  const currentTipo = form.watch('tipo_id')
+  const currentCategoria = form.watch('categoria_id')
+
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      const category = categories.find((c) => c.id === currentCategoria)
+      if (category && category.tipo !== currentTipo) {
+        form.setValue('categoria_id', '')
+      }
+    }
+  }, [currentTipo, currentCategoria, categories, form])
 
   useEffect(() => {
     if (transactionToEdit) {
@@ -269,12 +288,32 @@ export function TransactionForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.nome}
-                          </SelectItem>
+                        {Array.from(
+                          new Set(
+                            categories
+                              .filter((c) => c.tipo === form.watch('tipo_id'))
+                              .map((c) => c.grupo),
+                          ),
+                        ).map((grupo) => (
+                          <SelectGroup key={grupo}>
+                            <SelectLabel>{grupo}</SelectLabel>
+                            {categories
+                              .filter(
+                                (c) =>
+                                  c.tipo === form.watch('tipo_id') &&
+                                  c.grupo === grupo,
+                              )
+                              .map((category) => (
+                                <SelectItem
+                                  key={category.id}
+                                  value={category.id}
+                                >
+                                  {category.nome}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
                         ))}
-                      </SelectContent>
+                      </SelectContent>{' '}
                     </Select>
                     <FormMessage />
                   </FormItem>
