@@ -492,6 +492,34 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION send_welcome_email_webhook()
+//   CREATE OR REPLACE FUNCTION public.send_welcome_email_webhook()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_email text;
+//   BEGIN
+//     -- Busca o email do usuário recém-criado na tabela auth.users usando o ID do novo profile
+//     SELECT email INTO v_email FROM auth.users WHERE id = NEW.id;
+//
+//     IF v_email IS NOT NULL THEN
+//       -- Faz uma requisição HTTP POST assíncrona para a Edge Function de boas-vindas
+//       PERFORM net.http_post(
+//         url := 'https://hwigxdigeurmrgovdhgi.supabase.co/functions/v1/welcome-email',
+//         headers := '{"Content-Type": "application/json"}'::jsonb,
+//         body := jsonb_build_object(
+//           'email', v_email,
+//           'name', COALESCE(NEW.full_name, 'Usuário')
+//         )
+//       );
+//     END IF;
+//
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION set_transaction_org_id()
 //   CREATE OR REPLACE FUNCTION public.set_transaction_org_id()
 //    RETURNS trigger
@@ -508,6 +536,8 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: profiles
+//   trigger_send_welcome_email: CREATE TRIGGER trigger_send_welcome_email AFTER INSERT ON public.profiles FOR EACH ROW EXECUTE FUNCTION send_welcome_email_webhook()
 // Table: transactions
 //   set_transaction_org_id_trigger: CREATE TRIGGER set_transaction_org_id_trigger BEFORE INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION set_transaction_org_id()
 

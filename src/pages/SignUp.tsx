@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 
 export default function SignUp() {
   const [name, setName] = useState('')
+  const [organizationName, setOrganizationName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,7 +28,7 @@ export default function SignUp() {
     setLoading(true)
 
     try {
-      const { error } = await signUp(email, password, name)
+      const { error } = await signUp(email, password, name, organizationName)
 
       if (error) {
         toast.error(error.message)
@@ -65,6 +66,17 @@ export default function SignUp() {
                 placeholder="Seu nome"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="organizationName">Nome da Empresa</Label>
+              <Input
+                id="organizationName"
+                type="text"
+                placeholder="Nome da sua empresa"
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
                 required
               />
             </div>
