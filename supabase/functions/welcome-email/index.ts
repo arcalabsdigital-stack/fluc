@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Fluc <arcalabs.digital@gmail.com>',
+        from: 'Fluc <onboarding@resend.dev>',
         to: [email],
         subject: 'Bem-vindo ao Fluc seu novo Planejador Financeiro',
         html: htmlContent,
