@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
-import { supabase } from '@/lib/supabase/client'
 
 export default function SignUp() {
   const [name, setName] = useState('')
@@ -33,16 +32,9 @@ export default function SignUp() {
       if (error) {
         toast.error(error.message)
       } else {
-        try {
-          // Send welcome email using edge function
-          await supabase.functions.invoke('welcome-email', {
-            body: { email, name },
-          })
-        } catch (err) {
-          console.error('Failed to send welcome email:', err)
-        }
-
-        toast.success('Conta criada com sucesso!')
+        toast.success(
+          'Conta criada com sucesso! Verifique seu e-mail para confirmar o cadastro.',
+        )
         navigate('/login')
       }
     } catch (error: any) {
