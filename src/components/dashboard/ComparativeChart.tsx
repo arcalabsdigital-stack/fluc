@@ -45,7 +45,9 @@ export function ComparativeChart() {
         })
       }
       setData(result)
-    } catch (e) {}
+    } catch (e) {
+      console.error('Error fetching comparative chart data:', e)
+    }
   }
 
   return (

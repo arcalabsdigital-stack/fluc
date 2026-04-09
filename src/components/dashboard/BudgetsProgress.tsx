@@ -49,7 +49,9 @@ export function BudgetsProgress() {
         {} as Record<string, number>,
       )
       setExpensesByCategory(grouped)
-    } catch (e) {}
+    } catch (e) {
+      console.error('Error fetching expenses:', e)
+    }
   }
 
   const handleSaveBudget = async (e: React.FormEvent) => {
