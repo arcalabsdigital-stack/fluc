@@ -30,4 +30,6 @@ export interface Transacao {
   tipo_id: TipoTransacao
   forma_pagamento_id: FormaPagamento
   observacoes?: string
+  recurring_transaction_id?: string | null
+  is_recurring?: boolean
 }

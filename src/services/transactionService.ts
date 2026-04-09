@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 import { FilterState } from '@/components/transactions/TransactionFilters'
 import { Transacao, TipoTransacao, FormaPagamento, Role } from '@/lib/types'
-import { format } from 'date-fns'
+import { format, addMonths } from 'date-fns'
 
 // Helper to map DB row to Transacao type
 const mapToTransacao = (row: any): Transacao => ({
@@ -13,6 +13,8 @@ const mapToTransacao = (row: any): Transacao => ({
   tipo_id: row.type as TipoTransacao,
   forma_pagamento_id: row.payment_method as FormaPagamento,
   observacoes: row.notes,
+  recurring_transaction_id: row.recurring_transaction_id,
+  is_recurring: !!row.recurring_transaction_id,
 })
 
 // Helper to map Transacao to DB row
@@ -25,6 +27,7 @@ const mapToRow = (transaction: Omit<Transacao, 'id'>, userId: string) => ({
   type: transaction.tipo_id,
   payment_method: transaction.forma_pagamento_id,
   notes: transaction.observacoes,
+  recurring_transaction_id: transaction.recurring_transaction_id,
 })
 
 export const transactionService = {
@@ -98,7 +101,37 @@ export const transactionService = {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
 
-    const dbRow = mapToRow(transaction, user.id)
+    let recurringId = null
+
+    if (transaction.is_recurring) {
+      const nextDate = addMonths(transaction.data, 1)
+
+      const { data: recData, error: recError } = await supabase
+        .from('recurring_transactions')
+        .insert({
+          user_id: user.id,
+          description: transaction.descricao,
+          amount: transaction.valor,
+          category: transaction.categoria_id,
+          type: transaction.tipo_id,
+          payment_method: transaction.forma_pagamento_id,
+          frequency: 'monthly',
+          start_date: format(transaction.data, 'yyyy-MM-dd'),
+          next_date: format(nextDate, 'yyyy-MM-dd'),
+          notes: transaction.observacoes,
+        })
+        .select()
+        .single()
+
+      if (recError) throw recError
+      recurringId = recData.id
+    }
+
+    const dbRow = {
+      ...mapToRow(transaction, user.id),
+      recurring_transaction_id: recurringId,
+    }
+
     const { data, error } = await supabase
       .from('transactions')
       .insert(dbRow)
@@ -110,9 +143,95 @@ export const transactionService = {
   },
 
   async updateTransaction(id: string, transaction: Partial<Transacao>) {
-    // Policies have been updated to allow Admins and Owners to update their transactions.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
 
-    const updates: any = {}
+    const { data: existingTx, error: fetchError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (fetchError) throw fetchError
+
+    let recurringId = existingTx.recurring_transaction_id
+    const isCurrentlyRecurring = !!recurringId
+
+    if (transaction.is_recurring !== undefined) {
+      const wantsToBeRecurring = transaction.is_recurring
+
+      if (wantsToBeRecurring && !isCurrentlyRecurring) {
+        const startDate = transaction.data || new Date(existingTx.date)
+        const nextDate = addMonths(startDate, 1)
+
+        const { data: recData, error: recError } = await supabase
+          .from('recurring_transactions')
+          .insert({
+            user_id: user.id,
+            description: transaction.descricao || existingTx.description,
+            amount: transaction.valor || existingTx.amount,
+            category: transaction.categoria_id || existingTx.category,
+            type: transaction.tipo_id || existingTx.type,
+            payment_method:
+              transaction.forma_pagamento_id || existingTx.payment_method,
+            frequency: 'monthly',
+            start_date: format(startDate, 'yyyy-MM-dd'),
+            next_date: format(nextDate, 'yyyy-MM-dd'),
+            notes:
+              transaction.observacoes !== undefined
+                ? transaction.observacoes
+                : existingTx.notes,
+          })
+          .select()
+          .single()
+        if (recError) throw recError
+        recurringId = recData.id
+      } else if (!wantsToBeRecurring && isCurrentlyRecurring) {
+        await supabase
+          .from('recurring_transactions')
+          .delete()
+          .eq('id', recurringId)
+        recurringId = null
+      } else if (wantsToBeRecurring && isCurrentlyRecurring) {
+        await supabase
+          .from('recurring_transactions')
+          .update({
+            description: transaction.descricao || existingTx.description,
+            amount: transaction.valor || existingTx.amount,
+            category: transaction.categoria_id || existingTx.category,
+            type: transaction.tipo_id || existingTx.type,
+            payment_method:
+              transaction.forma_pagamento_id || existingTx.payment_method,
+            notes:
+              transaction.observacoes !== undefined
+                ? transaction.observacoes
+                : existingTx.notes,
+          })
+          .eq('id', recurringId)
+      }
+    } else if (isCurrentlyRecurring) {
+      await supabase
+        .from('recurring_transactions')
+        .update({
+          description: transaction.descricao || existingTx.description,
+          amount: transaction.valor || existingTx.amount,
+          category: transaction.categoria_id || existingTx.category,
+          type: transaction.tipo_id || existingTx.type,
+          payment_method:
+            transaction.forma_pagamento_id || existingTx.payment_method,
+          notes:
+            transaction.observacoes !== undefined
+              ? transaction.observacoes
+              : existingTx.notes,
+        })
+        .eq('id', recurringId)
+    }
+
+    const updates: any = {
+      recurring_transaction_id: recurringId,
+    }
     if (transaction.data) updates.date = format(transaction.data, 'yyyy-MM-dd')
     if (transaction.descricao) updates.description = transaction.descricao
     if (transaction.valor) updates.amount = transaction.valor

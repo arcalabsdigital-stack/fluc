@@ -41,6 +41,7 @@ import {
   SelectGroup,
   SelectLabel,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   Transacao,
   TipoTransacao,
@@ -70,6 +71,7 @@ const formSchema = z.object({
     required_error: 'Por favor selecione uma forma de pagamento.',
   }),
   observacoes: z.string().optional(),
+  is_recurring: z.boolean().default(false),
 })
 
 interface TransactionFormProps {
@@ -122,6 +124,7 @@ export function TransactionForm({
         tipo_id: transactionToEdit.tipo_id,
         forma_pagamento_id: transactionToEdit.forma_pagamento_id,
         observacoes: transactionToEdit.observacoes || '',
+        is_recurring: !!transactionToEdit.recurring_transaction_id,
       })
     } else {
       form.reset({
@@ -132,6 +135,7 @@ export function TransactionForm({
         tipo_id: TipoTransacao.Despesa,
         forma_pagamento_id: FormaPagamento.CartaoCredito,
         data: new Date(),
+        is_recurring: false,
       })
     }
   }, [transactionToEdit, form, open])
@@ -364,6 +368,29 @@ export function TransactionForm({
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="is_recurring"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      Transação Recorrente
+                    </FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Repetir esta transação automaticamente todos os meses.
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

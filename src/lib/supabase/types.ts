@@ -15,6 +15,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      budgets: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          id: string
+          month: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string | null
+          id?: string
+          month: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          id?: string
+          month?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'budgets_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -38,6 +76,44 @@ export type Database = {
           tipo?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          organization_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          organization_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          organization_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
       }
       organizations: {
         Row: {
@@ -91,6 +167,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'profiles_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      recurring_transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          description: string
+          frequency: string
+          id: string
+          next_date: string
+          notes: string | null
+          organization_id: string
+          payment_method: string
+          start_date: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          description: string
+          frequency: string
+          id?: string
+          next_date: string
+          notes?: string | null
+          organization_id: string
+          payment_method: string
+          start_date: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string
+          frequency?: string
+          id?: string
+          next_date?: string
+          notes?: string | null
+          organization_id?: string
+          payment_method?: string
+          start_date?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'recurring_transactions_organization_id_fkey'
             columns: ['organization_id']
             isOneToOne: false
             referencedRelation: 'organizations'
@@ -161,6 +296,7 @@ export type Database = {
       get_latest_transaction_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      process_recurring_transactions: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
@@ -304,12 +440,28 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: budgets
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
+//   category: text (not null)
+//   amount: numeric (not null, default: 0)
+//   month: text (not null)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: categories
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
 //   tipo: text (not null)
 //   grupo: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: notifications
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
+//   user_id: uuid (not null)
+//   title: text (not null)
+//   message: text (not null)
+//   is_read: boolean (nullable, default: false)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: organizations
 //   id: uuid (not null, default: gen_random_uuid())
 //   name: text (not null)
@@ -323,6 +475,21 @@ export const Constants = {
 //   role: text (not null, default: 'visitante'::text)
 //   avatar_url: text (nullable)
 //   organization_id: uuid (not null)
+// Table: recurring_transactions
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
+//   user_id: uuid (not null)
+//   description: text (not null)
+//   amount: numeric (not null)
+//   category: text (not null)
+//   type: text (not null)
+//   payment_method: text (not null)
+//   frequency: text (not null)
+//   start_date: date (not null)
+//   next_date: date (not null)
+//   notes: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: transactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -338,10 +505,17 @@ export const Constants = {
 //   organization_id: uuid (not null)
 
 // --- CONSTRAINTS ---
+// Table: budgets
+//   FOREIGN KEY budgets_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY budgets_pkey: PRIMARY KEY (id)
 // Table: categories
 //   UNIQUE categories_nome_tipo_unique: UNIQUE (nome, tipo)
 //   PRIMARY KEY categories_pkey: PRIMARY KEY (id)
 //   CHECK categories_tipo_check: CHECK ((tipo = ANY (ARRAY['Receita'::text, 'Despesa'::text])))
+// Table: notifications
+//   FOREIGN KEY notifications_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY notifications_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY notifications_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: organizations
 //   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
 // Table: profiles
@@ -349,15 +523,35 @@ export const Constants = {
 //   FOREIGN KEY profiles_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
 //   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
 //   CHECK profiles_role_check: CHECK ((role = ANY (ARRAY['admin'::text, 'colaborador'::text, 'visitante'::text])))
+// Table: recurring_transactions
+//   FOREIGN KEY recurring_transactions_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY recurring_transactions_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY recurring_transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 // Table: transactions
 //   FOREIGN KEY transactions_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
 //   PRIMARY KEY transactions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: budgets
+//   Policy "Users can delete budgets in their org" (DELETE, PERMISSIVE) roles={public}
+//     USING: (organization_id = get_current_user_org_id())
+//   Policy "Users can insert budgets in their org" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (organization_id = get_current_user_org_id())
+//   Policy "Users can update budgets in their org" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (organization_id = get_current_user_org_id())
+//   Policy "Users can view budgets in their org" (SELECT, PERMISSIVE) roles={public}
+//     USING: (organization_id = get_current_user_org_id())
 // Table: categories
 //   Policy "authenticated_select_categories" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: notifications
+//   Policy "Users can insert notifications" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (organization_id = get_current_user_org_id())
+//   Policy "Users can update their notifications" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (user_id = auth.uid())
+//   Policy "Users can view their notifications" (SELECT, PERMISSIVE) roles={public}
+//     USING: (user_id = auth.uid())
 // Table: organizations
 //   Policy "Users can view their own organization" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (id = get_current_user_org_id())
@@ -367,6 +561,15 @@ export const Constants = {
 //   Policy "Users can update their own profile" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (id = auth.uid())
 //   Policy "Users can view profiles in their organization" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (organization_id = get_current_user_org_id())
+// Table: recurring_transactions
+//   Policy "Users can delete recurring in their org" (DELETE, PERMISSIVE) roles={public}
+//     USING: (organization_id = get_current_user_org_id())
+//   Policy "Users can insert recurring in their org" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (organization_id = get_current_user_org_id())
+//   Policy "Users can update recurring in their org" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (organization_id = get_current_user_org_id())
+//   Policy "Users can view recurring in their org" (SELECT, PERMISSIVE) roles={public}
 //     USING: (organization_id = get_current_user_org_id())
 // Table: transactions
 //   Policy "Users can delete transactions in their org" (DELETE, PERMISSIVE) roles={authenticated}
@@ -379,6 +582,48 @@ export const Constants = {
 //     USING: (organization_id = get_current_user_org_id())
 
 // --- DATABASE FUNCTIONS ---
+// FUNCTION check_budget_on_transaction()
+//   CREATE OR REPLACE FUNCTION public.check_budget_on_transaction()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_budget RECORD;
+//       v_spent NUMERIC;
+//       v_month TEXT;
+//   BEGIN
+//       IF NEW.type = 'Despesa' THEN
+//           v_month := to_char(NEW.date, 'YYYY-MM');
+//
+//           SELECT * INTO v_budget FROM public.budgets
+//           WHERE category = NEW.category
+//           AND month = v_month
+//           AND organization_id = NEW.organization_id;
+//
+//           IF FOUND THEN
+//               SELECT COALESCE(SUM(amount), 0) + NEW.amount INTO v_spent
+//               FROM public.transactions
+//               WHERE category = NEW.category
+//               AND type = 'Despesa'
+//               AND to_char(date, 'YYYY-MM') = v_month
+//               AND organization_id = NEW.organization_id
+//               AND id != NEW.id;
+//
+//               IF v_spent >= v_budget.amount AND (v_spent - NEW.amount) < v_budget.amount THEN
+//                   INSERT INTO public.notifications (organization_id, user_id, title, message)
+//                   VALUES (
+//                       NEW.organization_id, NEW.user_id,
+//                       'Alerta de Orçamento',
+//                       'Atenção! Você atingiu ou ultrapassou o limite definido para esta categoria.'
+//                   );
+//               END IF;
+//           END IF;
+//       END IF;
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION get_current_user_org_id()
 //   CREATE OR REPLACE FUNCTION public.get_current_user_org_id()
 //    RETURNS uuid
@@ -529,6 +774,45 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION process_recurring_transactions()
+//   CREATE OR REPLACE FUNCTION public.process_recurring_transactions()
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       r RECORD;
+//   BEGIN
+//       FOR r IN
+//           SELECT * FROM public.recurring_transactions
+//           WHERE next_date <= CURRENT_DATE
+//       LOOP
+//           INSERT INTO public.transactions (
+//               organization_id, user_id, description, amount, category, type, payment_method, date
+//           ) VALUES (
+//               r.organization_id, r.user_id, r.description, r.amount, r.category, r.type, r.payment_method, r.next_date
+//           );
+//
+//           UPDATE public.recurring_transactions
+//           SET next_date = CASE
+//               WHEN frequency = 'monthly' THEN next_date + INTERVAL '1 month'
+//               WHEN frequency = 'weekly' THEN next_date + INTERVAL '1 week'
+//               WHEN frequency = 'yearly' THEN next_date + INTERVAL '1 year'
+//               ELSE next_date + INTERVAL '1 month'
+//           END,
+//           updated_at = NOW()
+//           WHERE id = r.id;
+//
+//           INSERT INTO public.notifications (organization_id, user_id, title, message)
+//           VALUES (
+//               r.organization_id, r.user_id,
+//               'Gasto Recorrente',
+//               'O gasto fixo "' || r.description || '" foi registrado automaticamente.'
+//           );
+//       END LOOP;
+//   END;
+//   $function$
+//
 // FUNCTION send_welcome_email_webhook()
 //   CREATE OR REPLACE FUNCTION public.send_welcome_email_webhook()
 //    RETURNS trigger
@@ -557,6 +841,20 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION set_org_id_on_insert()
+//   CREATE OR REPLACE FUNCTION public.set_org_id_on_insert()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//       IF NEW.organization_id IS NULL THEN
+//           NEW.organization_id := public.get_current_user_org_id();
+//       END IF;
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION set_transaction_org_id()
 //   CREATE OR REPLACE FUNCTION public.set_transaction_org_id()
 //    RETURNS trigger
@@ -573,9 +871,16 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: budgets
+//   set_budgets_org_id_trigger: CREATE TRIGGER set_budgets_org_id_trigger BEFORE INSERT ON public.budgets FOR EACH ROW EXECUTE FUNCTION set_org_id_on_insert()
+// Table: notifications
+//   set_notifications_org_id_trigger: CREATE TRIGGER set_notifications_org_id_trigger BEFORE INSERT ON public.notifications FOR EACH ROW EXECUTE FUNCTION set_org_id_on_insert()
 // Table: profiles
 //   trigger_send_welcome_email: CREATE TRIGGER trigger_send_welcome_email AFTER INSERT ON public.profiles FOR EACH ROW EXECUTE FUNCTION send_welcome_email_webhook()
+// Table: recurring_transactions
+//   set_recurring_org_id_trigger: CREATE TRIGGER set_recurring_org_id_trigger BEFORE INSERT ON public.recurring_transactions FOR EACH ROW EXECUTE FUNCTION set_org_id_on_insert()
 // Table: transactions
+//   check_budget_trigger: CREATE TRIGGER check_budget_trigger AFTER INSERT OR UPDATE ON public.transactions FOR EACH ROW EXECUTE FUNCTION check_budget_on_transaction()
 //   set_transaction_org_id_trigger: CREATE TRIGGER set_transaction_org_id_trigger BEFORE INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION set_transaction_org_id()
 
 // --- INDEXES ---
