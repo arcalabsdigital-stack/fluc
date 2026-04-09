@@ -244,6 +244,7 @@ export type Database = {
           notes: string | null
           organization_id: string
           payment_method: string
+          recurring_transaction_id: string | null
           type: string
           updated_at: string | null
           user_id: string
@@ -258,6 +259,7 @@ export type Database = {
           notes?: string | null
           organization_id: string
           payment_method: string
+          recurring_transaction_id?: string | null
           type: string
           updated_at?: string | null
           user_id: string
@@ -272,6 +274,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           payment_method?: string
+          recurring_transaction_id?: string | null
           type?: string
           updated_at?: string | null
           user_id?: string
@@ -282,6 +285,13 @@ export type Database = {
             columns: ['organization_id']
             isOneToOne: false
             referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transactions_recurring_transaction_id_fkey'
+            columns: ['recurring_transaction_id']
+            isOneToOne: false
+            referencedRelation: 'recurring_transactions'
             referencedColumns: ['id']
           },
         ]
@@ -503,6 +513,7 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   organization_id: uuid (not null)
+//   recurring_transaction_id: uuid (nullable)
 
 // --- CONSTRAINTS ---
 // Table: budgets
@@ -530,6 +541,7 @@ export const Constants = {
 // Table: transactions
 //   FOREIGN KEY transactions_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
 //   PRIMARY KEY transactions_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY transactions_recurring_transaction_id_fkey: FOREIGN KEY (recurring_transaction_id) REFERENCES recurring_transactions(id) ON DELETE SET NULL
 //   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
@@ -788,9 +800,9 @@ export const Constants = {
 //           WHERE next_date <= CURRENT_DATE
 //       LOOP
 //           INSERT INTO public.transactions (
-//               organization_id, user_id, description, amount, category, type, payment_method, date
+//               organization_id, user_id, description, amount, category, type, payment_method, date, recurring_transaction_id
 //           ) VALUES (
-//               r.organization_id, r.user_id, r.description, r.amount, r.category, r.type, r.payment_method, r.next_date
+//               r.organization_id, r.user_id, r.description, r.amount, r.category, r.type, r.payment_method, r.next_date, r.id
 //           );
 //
 //           UPDATE public.recurring_transactions

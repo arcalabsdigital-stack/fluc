@@ -11,6 +11,7 @@ import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import Users from './pages/Users'
+import History from './pages/History'
 import { TransactionProvider } from '@/stores/useTransactionStore'
 import { NotificationsBell } from '@/components/NotificationsBell'
 import { AuthProvider } from '@/hooks/use-auth'
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
                 <Route path="/users" element={<Users />} />
+                <Route path="/history" element={<History />} />
               </Route>
             </Route>
 

@@ -6,6 +6,7 @@ import {
   Settings,
   LogOut,
   Users,
+  History,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -139,6 +140,12 @@ export function Sidebar() {
                 isActive={pathname === '/users'}
               />
             )}
+            <SidebarItem
+              icon={History}
+              label="Histórico"
+              to="/history"
+              isActive={pathname === '/history'}
+            />
           </div>
         </div>
 
