@@ -14,8 +14,7 @@ import { useAuth } from '@/hooks/use-auth'
 import AccessDenied from '@/pages/AccessDenied'
 
 const Payments = () => {
-  const { transactions, fetchTransactions, loading, initialized } =
-    useTransactionStore()
+  const { transactions, fetchTransactions, loading } = useTransactionStore()
   const { role } = useAuth()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] =
@@ -54,9 +53,8 @@ const Payments = () => {
     return <AccessDenied />
   }
 
-  // Show loading state if loading is true OR if we haven't initialized data yet
-  // This prevents flickering or showing empty state before the first load completes
-  const showLoading = loading || !initialized
+  // Show loading state if loading is true
+  const showLoading = loading
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in pb-10">
