@@ -1,4 +1,4 @@
-import { Search, Bell, FileText, UserIcon, LogOut } from 'lucide-react'
+import { Search, Bell, UserIcon, LogOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -46,13 +46,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="bg-white rounded-full shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 relative"
-        >
-          <FileText className="w-5 h-5" />
-        </Button>
         <Button
           variant="ghost"
           size="icon"

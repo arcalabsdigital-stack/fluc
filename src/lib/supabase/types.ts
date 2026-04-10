@@ -15,6 +15,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          entity_name: string | null
+          entity_type: string
+          id: string
+          organization_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          organization_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'audit_logs_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'audit_logs_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       budgets: {
         Row: {
           amount: number
@@ -450,6 +498,15 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: audit_logs
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
+//   user_id: uuid (nullable)
+//   action: text (not null)
+//   entity_type: text (not null)
+//   entity_name: text (nullable)
+//   details: jsonb (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: budgets
 //   id: uuid (not null, default: gen_random_uuid())
 //   organization_id: uuid (not null)
@@ -516,6 +573,10 @@ export const Constants = {
 //   recurring_transaction_id: uuid (nullable)
 
 // --- CONSTRAINTS ---
+// Table: audit_logs
+//   FOREIGN KEY audit_logs_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY audit_logs_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY audit_logs_user_id_fkey: FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE SET NULL
 // Table: budgets
 //   FOREIGN KEY budgets_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 //   PRIMARY KEY budgets_pkey: PRIMARY KEY (id)
@@ -545,6 +606,13 @@ export const Constants = {
 //   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: audit_logs
+//   Policy "Admins can view all audit logs" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (is_admin() AND (organization_id = get_current_user_org_id()))
+//   Policy "Users can insert audit logs" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (organization_id = get_current_user_org_id())
+//   Policy "Users can view their own audit logs" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((user_id = auth.uid()) AND (organization_id = get_current_user_org_id()))
 // Table: budgets
 //   Policy "Users can delete budgets in their org" (DELETE, PERMISSIVE) roles={public}
 //     USING: (organization_id = get_current_user_org_id())
@@ -786,6 +854,88 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION log_profile_audit()
+//   CREATE OR REPLACE FUNCTION public.log_profile_audit()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_user_id UUID;
+//       v_action TEXT;
+//       v_entity_name TEXT;
+//       v_org_id UUID;
+//   BEGIN
+//       v_user_id := auth.uid();
+//       IF v_user_id IS NULL THEN
+//           v_user_id := COALESCE(NEW.id, OLD.id);
+//       END IF;
+//
+//       IF TG_OP = 'INSERT' THEN
+//           v_action := 'CREATE';
+//           v_entity_name := NEW.full_name;
+//           v_org_id := NEW.organization_id;
+//       ELSIF TG_OP = 'UPDATE' THEN
+//           v_action := 'UPDATE';
+//           v_entity_name := NEW.full_name;
+//           v_org_id := NEW.organization_id;
+//       ELSIF TG_OP = 'DELETE' THEN
+//           v_action := 'DELETE';
+//           v_entity_name := OLD.full_name;
+//           v_org_id := OLD.organization_id;
+//       END IF;
+//
+//       IF v_entity_name IS NULL OR v_entity_name = '' THEN
+//           v_entity_name := 'Novo Usuário';
+//       END IF;
+//
+//       INSERT INTO public.audit_logs (organization_id, user_id, action, entity_type, entity_name, details)
+//       VALUES (v_org_id, v_user_id, v_action, 'USER', v_entity_name,
+//               CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE row_to_json(NEW) END);
+//
+//       RETURN COALESCE(NEW, OLD);
+//   END;
+//   $function$
+//
+// FUNCTION log_transaction_audit()
+//   CREATE OR REPLACE FUNCTION public.log_transaction_audit()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//       v_user_id UUID;
+//       v_action TEXT;
+//       v_entity_name TEXT;
+//       v_org_id UUID;
+//   BEGIN
+//       v_user_id := auth.uid();
+//       IF v_user_id IS NULL THEN
+//           v_user_id := COALESCE(NEW.user_id, OLD.user_id);
+//       END IF;
+//
+//       IF TG_OP = 'INSERT' THEN
+//           v_action := 'CREATE';
+//           v_entity_name := NEW.description;
+//           v_org_id := NEW.organization_id;
+//       ELSIF TG_OP = 'UPDATE' THEN
+//           v_action := 'UPDATE';
+//           v_entity_name := NEW.description;
+//           v_org_id := NEW.organization_id;
+//       ELSIF TG_OP = 'DELETE' THEN
+//           v_action := 'DELETE';
+//           v_entity_name := OLD.description;
+//           v_org_id := OLD.organization_id;
+//       END IF;
+//
+//       INSERT INTO public.audit_logs (organization_id, user_id, action, entity_type, entity_name, details)
+//       VALUES (v_org_id, v_user_id, v_action, 'TRANSACTION', v_entity_name,
+//               CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE row_to_json(NEW) END);
+//
+//       RETURN COALESCE(NEW, OLD);
+//   END;
+//   $function$
+//
 // FUNCTION process_recurring_transactions()
 //   CREATE OR REPLACE FUNCTION public.process_recurring_transactions()
 //    RETURNS void
@@ -883,15 +1033,19 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
+// Table: audit_logs
+//   set_audit_logs_org_id_trigger: CREATE TRIGGER set_audit_logs_org_id_trigger BEFORE INSERT ON public.audit_logs FOR EACH ROW EXECUTE FUNCTION set_org_id_on_insert()
 // Table: budgets
 //   set_budgets_org_id_trigger: CREATE TRIGGER set_budgets_org_id_trigger BEFORE INSERT ON public.budgets FOR EACH ROW EXECUTE FUNCTION set_org_id_on_insert()
 // Table: notifications
 //   set_notifications_org_id_trigger: CREATE TRIGGER set_notifications_org_id_trigger BEFORE INSERT ON public.notifications FOR EACH ROW EXECUTE FUNCTION set_org_id_on_insert()
 // Table: profiles
+//   audit_profiles_trigger: CREATE TRIGGER audit_profiles_trigger AFTER INSERT OR DELETE OR UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION log_profile_audit()
 //   trigger_send_welcome_email: CREATE TRIGGER trigger_send_welcome_email AFTER INSERT ON public.profiles FOR EACH ROW EXECUTE FUNCTION send_welcome_email_webhook()
 // Table: recurring_transactions
 //   set_recurring_org_id_trigger: CREATE TRIGGER set_recurring_org_id_trigger BEFORE INSERT ON public.recurring_transactions FOR EACH ROW EXECUTE FUNCTION set_org_id_on_insert()
 // Table: transactions
+//   audit_transactions_trigger: CREATE TRIGGER audit_transactions_trigger AFTER INSERT OR DELETE OR UPDATE ON public.transactions FOR EACH ROW EXECUTE FUNCTION log_transaction_audit()
 //   check_budget_trigger: CREATE TRIGGER check_budget_trigger AFTER INSERT OR UPDATE ON public.transactions FOR EACH ROW EXECUTE FUNCTION check_budget_on_transaction()
 //   set_transaction_org_id_trigger: CREATE TRIGGER set_transaction_org_id_trigger BEFORE INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION set_transaction_org_id()
 

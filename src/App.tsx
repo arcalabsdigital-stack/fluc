@@ -13,7 +13,6 @@ import SignUp from './pages/SignUp'
 import Users from './pages/Users'
 import History from './pages/History'
 import { TransactionProvider } from '@/stores/useTransactionStore'
-import { NotificationsBell } from '@/components/NotificationsBell'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 
@@ -43,7 +42,6 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <NotificationsBell />
         </TooltipProvider>
       </TransactionProvider>
     </AuthProvider>
