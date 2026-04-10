@@ -19,15 +19,18 @@ const SidebarItem = ({
   to,
   isActive,
   badge,
+  onClick,
 }: {
   icon: any
   label: string
   to: string
   isActive: boolean
   badge?: string
+  onClick?: () => void
 }) => (
   <Link
     to={to}
+    onClick={onClick}
     className={cn(
       'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group hover:bg-white hover:shadow-sm',
       isActive
@@ -53,7 +56,13 @@ const SidebarItem = ({
   </Link>
 )
 
-export function Sidebar() {
+export function Sidebar({
+  className,
+  onNavigate,
+}: {
+  className?: string
+  onNavigate?: () => void
+}) {
   const location = useLocation()
   const pathname = location.pathname
   const { signOut, role, profile } = useAuth()
@@ -90,7 +99,12 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[#F8F9FB] border-r border-gray-100 p-6 flex flex-col z-40 hidden md:flex">
+    <aside
+      className={cn(
+        'fixed left-0 top-0 h-screen w-[280px] bg-[#F8F9FB] border-r border-gray-100 p-6 flex flex-col z-40 hidden md:flex',
+        className,
+      )}
+    >
       {/* Brand & Workspace */}
       <div className="flex flex-col mb-10 px-2 gap-2">
         <div className="flex items-center gap-3">
@@ -125,12 +139,14 @@ export function Sidebar() {
               label="Início"
               to="/"
               isActive={pathname === '/'}
+              onClick={onNavigate}
             />
             <SidebarItem
               icon={Wallet}
               label="Transações"
               to="/payments"
               isActive={pathname === '/payments'}
+              onClick={onNavigate}
             />
             {role === 'admin' && (
               <SidebarItem
@@ -138,6 +154,7 @@ export function Sidebar() {
                 label="Gerenciar Usuários"
                 to="/users"
                 isActive={pathname === '/users'}
+                onClick={onNavigate}
               />
             )}
             <SidebarItem
@@ -145,6 +162,7 @@ export function Sidebar() {
               label="Histórico"
               to="/history"
               isActive={pathname === '/history'}
+              onClick={onNavigate}
             />
           </div>
         </div>
@@ -159,12 +177,14 @@ export function Sidebar() {
               label="Ajuda"
               to="/help"
               isActive={pathname === '/help'}
+              onClick={onNavigate}
             />
             <SidebarItem
               icon={Settings}
               label="Configurações"
               to="/settings"
               isActive={pathname === '/settings'}
+              onClick={onNavigate}
             />
           </div>
         </div>

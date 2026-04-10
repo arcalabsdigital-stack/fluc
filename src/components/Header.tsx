@@ -1,4 +1,4 @@
-import { Search, Bell, UserIcon, LogOut } from 'lucide-react'
+import { Search, Bell, UserIcon, LogOut, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -8,11 +8,25 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { Sidebar } from './Sidebar'
+import { useState, useEffect } from 'react'
 
 export function Header() {
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location.pathname])
 
   const userName =
     profile?.full_name || user?.user_metadata?.full_name || 'Usuário'
@@ -35,8 +49,27 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 w-full bg-[#F8F9FB]/80 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-gray-100 gap-2">
-      <div className="flex-1 max-w-xs sm:max-w-md">
-        <div className="relative">
+      <div className="flex items-center gap-2 flex-1 max-w-xs sm:max-w-md">
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden flex-shrink-0 -ml-2 text-gray-600 hover:text-gray-900"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="sr-only">Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-[280px] border-r-0">
+            <SheetTitle className="sr-only">Menu Principal</SheetTitle>
+            <Sidebar
+              className="flex md:flex relative w-full h-full border-none z-50 bg-[#F8F9FB]"
+              onNavigate={() => setMobileMenuOpen(false)}
+            />
+          </SheetContent>
+        </Sheet>
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
           <Input
             placeholder="Buscar..."
