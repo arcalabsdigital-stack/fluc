@@ -87,37 +87,40 @@ const Index = () => {
 
   if (loading && !kpis) {
     return (
-      <div className="flex flex-col gap-6 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6 p-4 sm:p-6">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-[140px] rounded-3xl" />
+            <Skeleton
+              key={i}
+              className="h-[120px] sm:h-[140px] rounded-2xl sm:rounded-3xl"
+            />
           ))}
         </div>
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-[400px]">
-          <Skeleton className="xl:col-span-2 h-full rounded-3xl" />
-          <Skeleton className="h-full rounded-3xl" />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-[400px]">
+          <Skeleton className="xl:col-span-2 h-full rounded-2xl sm:rounded-3xl" />
+          <Skeleton className="h-full rounded-2xl sm:rounded-3xl" />
         </div>
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-[400px]">
-          <Skeleton className="h-full rounded-3xl" />
-          <Skeleton className="h-full rounded-3xl" />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 h-[400px]">
+          <Skeleton className="h-full rounded-2xl sm:rounded-3xl" />
+          <Skeleton className="h-full rounded-2xl sm:rounded-3xl" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-fade-in pb-10">
+    <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in pb-10 px-0 sm:px-0">
       {/* KPI Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
         {kpiData.map((kpi, index) => (
-          <div key={index} className="h-[140px]">
+          <div key={index} className="h-[120px] sm:h-[140px]">
             <KPICard data={kpi} />
           </div>
         ))}
       </div>
 
       {/* Middle Section: Performance + Categories */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-auto min-h-[400px]">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-auto min-h-[400px]">
         <div className="xl:col-span-2 h-[400px] xl:h-full">
           <PerformanceChart data={chartData} />
         </div>
@@ -127,7 +130,7 @@ const Index = () => {
       </div>
 
       {/* Analytics Section */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-auto min-h-[350px]">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-auto min-h-[350px]">
         <div className="h-[350px] xl:h-full xl:col-span-2">
           <ComparativeChart />
         </div>
@@ -137,7 +140,7 @@ const Index = () => {
       </div>
 
       {/* Bottom Section: Recent Transactions + Expense Breakdown */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-auto min-h-[400px]">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 h-auto min-h-[400px]">
         <div className="h-full min-h-[400px]">
           <RecentTransactions transactions={recentTransactions} />
         </div>

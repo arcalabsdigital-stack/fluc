@@ -57,17 +57,19 @@ const Payments = () => {
   const showLoading = loading
 
   return (
-    <div className="flex flex-col gap-6 animate-fade-in pb-10">
+    <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in pb-10 px-0 sm:px-0">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Transações</h1>
-          <p className="text-gray-500">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            Transações
+          </h1>
+          <p className="text-sm sm:text-base text-gray-500">
             Gerencie seus registros financeiros e histórico.
           </p>
         </div>
         <Button
           onClick={handleCreate}
-          className="shadow-lg hover:shadow-xl transition-all"
+          className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nova Transação
