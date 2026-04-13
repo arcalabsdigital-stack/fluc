@@ -3,10 +3,16 @@ import { FilterState } from '@/components/transactions/TransactionFilters'
 import { Transacao, TipoTransacao, FormaPagamento, Role } from '@/lib/types'
 import { format, addMonths } from 'date-fns'
 
+const parseLocalDate = (dateStr: string) => {
+  if (!dateStr) return new Date()
+  const [year, month, day] = dateStr.split('T')[0].split('-')
+  return new Date(Number(year), Number(month) - 1, Number(day))
+}
+
 // Helper to map DB row to Transacao type
 const mapToTransacao = (row: any): Transacao => ({
   id: row.id,
-  data: new Date(row.date),
+  data: parseLocalDate(row.date),
   descricao: row.description,
   valor: Number(row.amount),
   categoria_id: row.category,
@@ -202,7 +208,7 @@ export const transactionService = {
       const wantsToBeRecurring = transaction.is_recurring
 
       if (wantsToBeRecurring && !isCurrentlyRecurring) {
-        const startDate = transaction.data || new Date(existingTx.date)
+        const startDate = transaction.data || parseLocalDate(existingTx.date)
         const nextDate = addMonths(startDate, 1)
 
         const { data: recData, error: recError } = await supabase
