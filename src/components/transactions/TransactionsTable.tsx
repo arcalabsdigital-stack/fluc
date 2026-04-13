@@ -28,9 +28,14 @@ import { ImportTransactions } from './ImportTransactions'
 interface TransactionsTableProps {
   data: Transacao[]
   onEdit: (transaction: Transacao) => void
+  onImportSuccess?: () => void
 }
 
-export function TransactionsTable({ data, onEdit }: TransactionsTableProps) {
+export function TransactionsTable({
+  data,
+  onEdit,
+  onImportSuccess,
+}: TransactionsTableProps) {
   const { categories, deleteTransaction } = useTransactionStore()
 
   const getCategoryName = (id: string) => {
@@ -54,7 +59,7 @@ export function TransactionsTable({ data, onEdit }: TransactionsTableProps) {
       <div className="space-y-4">
         <div className="flex justify-end items-center flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <ImportTransactions />
+            <ImportTransactions onSuccess={onImportSuccess} />
           </div>
         </div>
         <div className="flex flex-col items-center justify-center py-12 text-center border rounded-xl bg-white shadow-sm">
@@ -74,7 +79,7 @@ export function TransactionsTable({ data, onEdit }: TransactionsTableProps) {
           Total de {data.length} transações
         </div>
         <div className="flex items-center gap-2">
-          <ImportTransactions />
+          <ImportTransactions onSuccess={onImportSuccess} />
           <Button
             variant="outline"
             size="sm"

@@ -2,7 +2,6 @@ import { useState, useRef } from 'react'
 import { Download, FileUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
-import useTransactionStore from '@/stores/useTransactionStore'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -25,13 +24,16 @@ function parseCSVRow(str: string) {
     }
   }
   result.push(current)
-  return result
+  return result.map((val) => val.trim().replace(/^"|"$/g, ''))
 }
 
-export function ImportTransactions() {
+interface ImportTransactionsProps {
+  onSuccess?: () => void
+}
+
+export function ImportTransactions({ onSuccess }: ImportTransactionsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const { fetchTransactions } = useTransactionStore()
   const { user } = useAuth()
   const [isImporting, setIsImporting] = useState(false)
 
@@ -57,8 +59,8 @@ export function ImportTransactions() {
 
     const csvContent = [headers.join(','), example.join(',')].join('\n')
 
-    const blob = new Blob(['\uFEFF' + csvContent], {
-      type: 'text/csv;charset=utf-8;',
+    const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csvContent], {
+      type: 'text/csv;charset=utf-8',
     })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -170,7 +172,7 @@ export function ImportTransactions() {
       })
 
       if (successCount > 0) {
-        fetchTransactions()
+        onSuccess?.()
       }
     } catch (error: any) {
       toast({

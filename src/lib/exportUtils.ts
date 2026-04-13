@@ -36,8 +36,8 @@ export function exportToCSV(transactions: Transacao[]) {
     ),
   ].join('\n')
 
-  const blob = new Blob(['\uFEFF' + csvContent], {
-    type: 'text/csv;charset=utf-8;',
+  const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csvContent], {
+    type: 'text/csv;charset=utf-8',
   })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')

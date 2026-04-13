@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/use-auth'
 import AccessDenied from '@/pages/AccessDenied'
 
 const Payments = () => {
-  const { transactions, fetchTransactions, loading } = useTransactionStore()
+  const { transactions, fetchTransactions, isLoading } = useTransactionStore()
   const { role } = useAuth()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] =
@@ -31,12 +31,20 @@ const Payments = () => {
 
   // Fetch transactions when filters change
   useEffect(() => {
+    if (!role) return
+
     // Add debounce for search/filter changes to prevent rapid requests
     const timer = setTimeout(() => {
-      fetchTransactions(filters)
+      fetchTransactions(filters, role)
     }, 300)
     return () => clearTimeout(timer)
-  }, [filters, fetchTransactions]) // fetchTransactions is stable
+  }, [filters, fetchTransactions, role]) // fetchTransactions is stable
+
+  const handleImportSuccess = () => {
+    if (role) {
+      fetchTransactions(filters, role)
+    }
+  }
 
   const handleCreate = () => {
     setEditingTransaction(null)
@@ -55,7 +63,7 @@ const Payments = () => {
   }
 
   // Show loading state if loading is true
-  const showLoading = loading
+  const showLoading = isLoading
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in pb-10 px-0 sm:px-0">
@@ -69,7 +77,7 @@ const Payments = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <ImportTransactions />
+          <ImportTransactions onSuccess={handleImportSuccess} />
           <Button
             onClick={handleCreate}
             className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
@@ -87,7 +95,11 @@ const Payments = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       ) : (
-        <TransactionsTable data={transactions} onEdit={handleEdit} />
+        <TransactionsTable
+          data={transactions}
+          onEdit={handleEdit}
+          onImportSuccess={handleImportSuccess}
+        />
       )}
 
       <TransactionForm
