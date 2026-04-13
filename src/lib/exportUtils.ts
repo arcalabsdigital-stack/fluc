@@ -23,10 +23,22 @@ export function exportToCSV(transactions: Transacao[]) {
 
   const csvContent = [
     headers.join(','),
-    ...rows.map((e) => e.map((f) => `"${f.replace(/"/g, '""')}"`).join(',')),
+    ...rows.map((row) =>
+      row
+        .map((field) => {
+          const str = String(field || '')
+          if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`
+          }
+          return str
+        })
+        .join(','),
+    ),
   ].join('\n')
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob(['\uFEFF' + csvContent], {
+    type: 'text/csv;charset=utf-8;',
+  })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.setAttribute('href', url)

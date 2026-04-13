@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { TransactionForm } from '@/components/transactions/TransactionForm'
+import { ImportTransactions } from '@/components/transactions/ImportTransactions'
 import {
   TransactionFilters,
   FilterState,
@@ -67,13 +68,16 @@ const Payments = () => {
             Gerencie seus registros financeiros e histórico.
           </p>
         </div>
-        <Button
-          onClick={handleCreate}
-          className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Transação
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <ImportTransactions />
+          <Button
+            onClick={handleCreate}
+            className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Transação
+          </Button>
+        </div>
       </div>
 
       <TransactionFilters filters={filters} setFilters={setFilters} />

@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react'
-import { Upload, Download, FileUp } from 'lucide-react'
+import { Download, FileUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 import useTransactionStore from '@/stores/useTransactionStore'
-import { TipoTransacao, FormaPagamento, Transacao } from '@/lib/types'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 function parseCSVRow(str: string) {
   const result = []
@@ -30,8 +31,8 @@ function parseCSVRow(str: string) {
 export function ImportTransactions() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const { createTransaction, categories, fetchTransactions } =
-    useTransactionStore()
+  const { fetchTransactions } = useTransactionStore()
+  const { user } = useAuth()
   const [isImporting, setIsImporting] = useState(false)
 
   const downloadTemplate = () => {
@@ -54,12 +55,11 @@ export function ImportTransactions() {
       'Compra para o escritório',
     ]
 
-    const csvContent = [
-      headers.join(','),
-      example.map((e) => `"${e}"`).join(','),
-    ].join('\n')
+    const csvContent = [headers.join(','), example.join(',')].join('\n')
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(['\uFEFF' + csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
@@ -83,7 +83,7 @@ export function ImportTransactions() {
       }
 
       let errorCount = 0
-      const transactionsToCreate: Omit<Transacao, 'id'>[] = []
+      const transactionsToCreate: any[] = []
 
       for (let i = 1; i < rows.length; i++) {
         try {
@@ -117,32 +117,25 @@ export function ImportTransactions() {
           const amount = parseFloat(amountStr)
           if (isNaN(amount)) throw new Error('Valor inválido')
 
-          const categoryName = values[3]
+          const categoryName = values[3].trim()
           const typeStr = values[4].trim()
           const type =
-            typeStr.toLowerCase() === 'receita'
-              ? TipoTransacao.Receita
-              : TipoTransacao.Despesa
+            typeStr.toLowerCase() === 'receita' ? 'Receita' : 'Despesa'
 
-          const paymentMethod = values[5].trim() as FormaPagamento
+          const paymentMethod = values[5].trim()
           const notes = values[6] || ''
 
-          const category = categories.find(
-            (c) => c.nome.toLowerCase() === categoryName.toLowerCase(),
-          )
-          const category_id = category ? category.id : categories[0]?.id
-
-          if (!category_id) throw new Error('Categoria não encontrada')
+          if (!categoryName) throw new Error('Categoria inválida')
 
           transactionsToCreate.push({
-            data: date,
-            descricao: description,
-            valor: amount,
-            categoria_id: category_id,
-            tipo_id: type,
-            forma_pagamento_id: paymentMethod,
-            observacoes: notes,
-            is_recurring: false,
+            date: date.toISOString().split('T')[0],
+            description: description,
+            amount: amount,
+            category: categoryName,
+            type: type,
+            payment_method: paymentMethod,
+            notes: notes,
+            user_id: user?.id,
           })
         } catch (err) {
           console.error(`Erro na linha ${i + 1}:`, err)
@@ -155,23 +148,19 @@ export function ImportTransactions() {
       }
 
       // Batch requests to prevent overwhelming the server
-      const batchSize = 5
+      const batchSize = 100
       let successCount = 0
 
       for (let i = 0; i < transactionsToCreate.length; i += batchSize) {
         const batch = transactionsToCreate.slice(i, i + batchSize)
-        const results = await Promise.allSettled(
-          batch.map((tx) => createTransaction(tx)),
-        )
+        const { error } = await supabase.from('transactions').insert(batch)
 
-        results.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            successCount++
-          } else {
-            errorCount++
-            console.error('Erro ao salvar transação:', result.reason)
-          }
-        })
+        if (error) {
+          errorCount += batch.length
+          console.error('Erro ao salvar lote de transações:', error)
+        } else {
+          successCount += batch.length
+        }
       }
 
       toast({
@@ -201,7 +190,6 @@ export function ImportTransactions() {
     <>
       <Button
         variant="outline"
-        size="sm"
         className="gap-2 hidden sm:flex text-blue-600 border-blue-200 hover:bg-blue-50"
         onClick={downloadTemplate}
       >
@@ -219,7 +207,6 @@ export function ImportTransactions() {
 
       <Button
         variant="outline"
-        size="sm"
         className="gap-2 text-green-600 border-green-200 hover:bg-green-50"
         onClick={() => fileInputRef.current?.click()}
         disabled={isImporting}
