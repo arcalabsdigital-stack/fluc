@@ -72,6 +72,7 @@ const formSchema = z.object({
   }),
   observacoes: z.string().optional(),
   is_recurring: z.boolean().default(false),
+  parcelas: z.coerce.number().min(1).default(1),
 })
 
 interface TransactionFormProps {
@@ -104,6 +105,13 @@ export function TransactionForm({
 
   const currentTipo = form.watch('tipo_id')
   const currentCategoria = form.watch('categoria_id')
+  const currentFormaPagamento = form.watch('forma_pagamento_id')
+  const parcelas = form.watch('parcelas')
+
+  const isInstallmentEligible =
+    !transactionToEdit &&
+    (currentFormaPagamento === FormaPagamento.CartaoCredito ||
+      currentFormaPagamento === FormaPagamento.Boleto)
 
   useEffect(() => {
     if (categories && categories.length > 0) {
@@ -125,6 +133,7 @@ export function TransactionForm({
         forma_pagamento_id: transactionToEdit.forma_pagamento_id,
         observacoes: transactionToEdit.observacoes || '',
         is_recurring: !!transactionToEdit.recurring_transaction_id,
+        parcelas: 1,
       })
     } else {
       form.reset({
@@ -136,6 +145,7 @@ export function TransactionForm({
         forma_pagamento_id: FormaPagamento.CartaoCredito,
         data: new Date(),
         is_recurring: false,
+        parcelas: 1,
       })
     }
   }, [transactionToEdit, form, open])
@@ -370,28 +380,46 @@ export function TransactionForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="is_recurring"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Transação Recorrente
-                    </FormLabel>
-                    <div className="text-sm text-muted-foreground">
-                      Repetir esta transação automaticamente todos os meses.
+            {isInstallmentEligible && (
+              <FormField
+                control={form.control}
+                name="parcelas"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número de Parcelas</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" max="72" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {(!isInstallmentEligible || parcelas === 1) && (
+              <FormField
+                control={form.control}
+                name="is_recurring"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Transação Recorrente
+                      </FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Repetir esta transação automaticamente todos os meses.
+                      </div>
                     </div>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <SheetFooter>
               <Button

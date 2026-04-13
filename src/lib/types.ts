@@ -32,4 +32,5 @@ export interface Transacao {
   observacoes?: string
   recurring_transaction_id?: string | null
   is_recurring?: boolean
+  parcelas?: number
 }

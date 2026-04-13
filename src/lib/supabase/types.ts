@@ -734,10 +734,11 @@ export const Constants = {
 //     v_start_last_month := date_trunc('month', p_date_now - interval '1 month');
 //     v_end_last_month := (date_trunc('month', p_date_now) - interval '1 day')::date;
 //
-//     -- Calculate Total Balance (All time based on visibility)
+//     -- Calculate Total Balance (All time based on visibility, up to today so future manual entries do not alter today's balance)
 //     SELECT COALESCE(SUM(CASE WHEN type = 'Receita' THEN amount ELSE -amount END), 0)
 //     INTO v_total_balance
-//     FROM public.transactions;
+//     FROM public.transactions
+//     WHERE date <= p_date_now;
 //
 //     -- Calculate Month Income
 //     SELECT COALESCE(SUM(amount), 0)

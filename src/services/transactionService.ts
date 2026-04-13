@@ -101,6 +101,45 @@ export const transactionService = {
     } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
 
+    const parcelas = transaction.parcelas || 1
+
+    if (parcelas > 1 && !transaction.is_recurring) {
+      const amountPerInstallment = Number(
+        (transaction.valor / parcelas).toFixed(2),
+      )
+      const remainder = Number(
+        (transaction.valor - amountPerInstallment * parcelas).toFixed(2),
+      )
+
+      const rowsToInsert = Array.from({ length: parcelas }).map((_, i) => {
+        const installmentDate = addMonths(transaction.data, i)
+        const isLast = i === parcelas - 1
+        const installmentAmount =
+          amountPerInstallment + (isLast ? remainder : 0)
+
+        return {
+          ...mapToRow(
+            {
+              ...transaction,
+              data: installmentDate,
+              descricao: `${transaction.descricao} (Parcela ${i + 1}/${parcelas})`,
+              valor: installmentAmount,
+            },
+            user.id,
+          ),
+          recurring_transaction_id: null,
+        }
+      })
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(rowsToInsert)
+        .select()
+
+      if (error) throw error
+      return mapToTransacao(data[0])
+    }
+
     let recurringId = null
 
     if (transaction.is_recurring) {
