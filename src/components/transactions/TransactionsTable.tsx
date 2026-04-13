@@ -23,6 +23,7 @@ import { Transacao, TipoTransacao } from '@/lib/types'
 import { format } from 'date-fns'
 import { Edit, Trash2, Download } from 'lucide-react'
 import useTransactionStore from '@/stores/useTransactionStore'
+import { ImportTransactions } from './ImportTransactions'
 
 interface TransactionsTableProps {
   data: Transacao[]
@@ -50,27 +51,40 @@ export function TransactionsTable({ data, onEdit }: TransactionsTableProps) {
 
   if (data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center border rounded-xl bg-white shadow-sm">
-        <p className="text-gray-500 mb-2">Nenhuma transação encontrada.</p>
-        <p className="text-sm text-gray-400">
-          Ajuste os filtros ou adicione uma nova transação.
-        </p>
+      <div className="space-y-4">
+        <div className="flex justify-end items-center flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <ImportTransactions />
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 text-center border rounded-xl bg-white shadow-sm">
+          <p className="text-gray-500 mb-2">Nenhuma transação encontrada.</p>
+          <p className="text-sm text-gray-400">
+            Ajuste os filtros ou adicione uma nova transação.
+          </p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExport}
-          className="gap-2"
-        >
-          <Download className="h-4 w-4" />
-          Exportar CSV
-        </Button>
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className="text-sm text-gray-500 font-medium">
+          Total de {data.length} transações
+        </div>
+        <div className="flex items-center gap-2">
+          <ImportTransactions />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
+        </div>
       </div>
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <Table>
