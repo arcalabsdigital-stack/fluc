@@ -6,8 +6,10 @@ import { RecentTransactions } from '@/components/dashboard/RecentTransactions'
 import { ExpenseDistribution } from '@/components/dashboard/ExpenseDistribution'
 import { BudgetsProgress } from '@/components/dashboard/BudgetsProgress'
 import { ComparativeChart } from '@/components/dashboard/ComparativeChart'
+import { CashFlowProjection } from '@/components/dashboard/CashFlowProjection'
 import { KPIMetric } from '@/lib/types'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const Index = () => {
   const {
@@ -16,6 +18,9 @@ const Index = () => {
     chartData,
     categoryDistribution,
     paymentDistribution,
+    projectionData,
+    projectionMonths,
+    setProjectionMonths,
     loading,
   } = useDashboard()
 
@@ -119,35 +124,54 @@ const Index = () => {
         ))}
       </div>
 
-      {/* Middle Section: Performance + Categories */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-auto min-h-[400px]">
-        <div className="xl:col-span-2 h-[400px] xl:h-full">
-          <PerformanceChart data={chartData} />
-        </div>
-        <div className="h-[400px] xl:h-full">
-          <BudgetsProgress />
-        </div>
-      </div>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="projection">Projeção de Fluxo</TabsTrigger>
+        </TabsList>
 
-      {/* Analytics Section */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-auto min-h-[350px]">
-        <div className="h-[350px] xl:h-full xl:col-span-2">
-          <ComparativeChart />
-        </div>
-        <div className="h-[350px] xl:h-full">
-          <CategoryDistributionChart data={categoryDistribution} />
-        </div>
-      </div>
+        <TabsContent value="overview" className="flex flex-col gap-4 sm:gap-6">
+          {/* Middle Section: Performance + Categories */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-auto min-h-[400px]">
+            <div className="xl:col-span-2 h-[400px] xl:h-full">
+              <PerformanceChart data={chartData} />
+            </div>
+            <div className="h-[400px] xl:h-full">
+              <BudgetsProgress />
+            </div>
+          </div>
 
-      {/* Bottom Section: Recent Transactions + Expense Breakdown */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 h-auto min-h-[400px]">
-        <div className="h-full min-h-[400px]">
-          <RecentTransactions transactions={recentTransactions} />
-        </div>
-        <div className="h-full min-h-[400px]">
-          <ExpenseDistribution data={paymentDistribution} />
-        </div>
-      </div>
+          {/* Analytics Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-auto min-h-[350px]">
+            <div className="h-[350px] xl:h-full xl:col-span-2">
+              <ComparativeChart />
+            </div>
+            <div className="h-[350px] xl:h-full">
+              <CategoryDistributionChart data={categoryDistribution} />
+            </div>
+          </div>
+
+          {/* Bottom Section: Recent Transactions + Expense Breakdown */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 h-auto min-h-[400px]">
+            <div className="h-full min-h-[400px]">
+              <RecentTransactions transactions={recentTransactions} />
+            </div>
+            <div className="h-full min-h-[400px]">
+              <ExpenseDistribution data={paymentDistribution} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="projection">
+          <div className="h-[500px]">
+            <CashFlowProjection
+              data={projectionData}
+              months={projectionMonths}
+              onMonthsChange={setProjectionMonths}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

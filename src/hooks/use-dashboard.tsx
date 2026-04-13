@@ -8,15 +8,36 @@ import {
   TipoTransacao,
   PaymentMethodDistribution,
 } from '@/lib/types'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns'
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  addMonths,
+  isAfter,
+  addWeeks,
+  addYears,
+  endOfDay,
+} from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { mockCategories } from '@/lib/data'
 import { toast } from 'sonner'
 import useTransactionStore from '@/stores/useTransactionStore'
 import { useAuth } from '@/hooks/use-auth'
 
+export interface ProjectionDataPoint {
+  month: string
+  balance: number
+  expectedIncome: number
+  expectedExpense: number
+}
+
 export const useDashboard = () => {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
+  const [projectionData, setProjectionData] = useState<ProjectionDataPoint[]>(
+    [],
+  )
+  const [projectionMonths, setProjectionMonths] = useState<number>(6)
   const [recentTransactions, setRecentTransactions] = useState<Transacao[]>([])
   const [chartData, setChartData] = useState<ChartDataPoint[]>([])
   const [categoryDistribution, setCategoryDistribution] = useState<
@@ -40,26 +61,35 @@ export const useDashboard = () => {
       setChartData([])
       setCategoryDistribution([])
       setPaymentDistribution([])
+      setProjectionData([])
       return
     }
 
     try {
       setLoading(true)
       // We fetch data regardless of role, trusting RLS and service logic to filter
-      const [kpiData, recentData, monthData] = await Promise.all([
-        dashboardService.getKPIs(),
-        dashboardService.getRecentTransactions(6),
-        dashboardService.getTransactionsForPeriod(
-          startOfMonth(new Date()),
-          endOfMonth(new Date()),
-        ),
-      ])
+      const [kpiData, recentData, monthData, futureData, recurringData] =
+        await Promise.all([
+          dashboardService.getKPIs(),
+          dashboardService.getRecentTransactions(6),
+          dashboardService.getTransactionsForPeriod(
+            startOfMonth(new Date()),
+            endOfMonth(new Date()),
+          ),
+          dashboardService.getFutureTransactions(addMonths(new Date(), 12)),
+          dashboardService.getRecurringTransactions(),
+        ])
 
       setKpis(kpiData)
       setRecentTransactions(recentData)
       processChartData(monthData)
       processCategoryData(monthData)
       processPaymentData(monthData)
+      processProjectionData(
+        kpiData?.totalBalance || 0,
+        futureData,
+        recurringData,
+      )
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       toast.error('Erro ao carregar dados do dashboard')
@@ -165,6 +195,76 @@ export const useDashboard = () => {
     setPaymentDistribution(distribution)
   }
 
+  const processProjectionData = (
+    currentBalance: number,
+    futureTransactions: Transacao[],
+    recurringTransactions: any[],
+  ) => {
+    const today = new Date()
+
+    // Generate projection for 12 periods, starting with the current month
+    const months = Array.from({ length: 12 }).map((_, i) => {
+      const monthDate = addMonths(today, i)
+      return {
+        date: monthDate,
+        label: format(monthDate, 'MMM/yy', { locale: ptBR }),
+        start: i === 0 ? endOfDay(today) : startOfMonth(monthDate),
+        end: endOfMonth(monthDate),
+      }
+    })
+
+    let runningBalance = currentBalance
+    const projection: ProjectionDataPoint[] = []
+
+    months.forEach((m) => {
+      let income = 0
+      let expense = 0
+
+      // Add future manual transactions for this month segment
+      futureTransactions.forEach((t) => {
+        if (isAfter(t.data, m.start) && !isAfter(t.data, m.end)) {
+          if (t.tipo_id === TipoTransacao.Receita) income += t.valor
+          else expense += t.valor
+        }
+      })
+
+      // Add recurring transactions occurrences for this month segment
+      recurringTransactions.forEach((rt) => {
+        let simDate = new Date(rt.next_date)
+
+        let circuitBreaker = 0
+        while (!isAfter(simDate, m.end) && circuitBreaker < 100) {
+          circuitBreaker++
+          if (isAfter(simDate, m.start)) {
+            if (rt.type === 'Receita') income += Number(rt.amount)
+            else expense += Number(rt.amount)
+          }
+
+          if (rt.frequency === 'monthly') {
+            simDate = addMonths(simDate, 1)
+          } else if (rt.frequency === 'weekly') {
+            simDate = addWeeks(simDate, 1)
+          } else if (rt.frequency === 'yearly') {
+            simDate = addYears(simDate, 1)
+          } else {
+            simDate = addMonths(simDate, 1)
+          }
+        }
+      })
+
+      runningBalance += income - expense
+
+      projection.push({
+        month: m.label,
+        balance: runningBalance,
+        expectedIncome: income,
+        expectedExpense: expense,
+      })
+    })
+
+    setProjectionData(projection)
+  }
+
   useEffect(() => {
     fetchData()
   }, [fetchData, storeTransactions]) // Refresh when transactions change in store
@@ -175,6 +275,9 @@ export const useDashboard = () => {
     chartData,
     categoryDistribution,
     paymentDistribution,
+    projectionData,
+    projectionMonths,
+    setProjectionMonths,
     loading,
     refresh: fetchData,
   }

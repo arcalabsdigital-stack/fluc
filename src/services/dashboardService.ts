@@ -51,6 +51,45 @@ export const dashboardService = {
     }))
   },
 
+  async getFutureTransactions(endDate: Date): Promise<Transacao[]> {
+    const today = format(new Date(), 'yyyy-MM-dd')
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .gt('date', today)
+      .lte('date', format(endDate, 'yyyy-MM-dd'))
+      .order('date', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching future transactions:', error)
+      throw error
+    }
+
+    return data.map((row) => ({
+      id: row.id,
+      data: new Date(row.date),
+      descricao: row.description,
+      valor: Number(row.amount),
+      categoria_id: row.category,
+      tipo_id: row.type as TipoTransacao,
+      forma_pagamento_id: row.payment_method as FormaPagamento,
+      observacoes: row.notes,
+    }))
+  },
+
+  async getRecurringTransactions() {
+    const { data, error } = await supabase
+      .from('recurring_transactions')
+      .select('*')
+
+    if (error) {
+      console.error('Error fetching recurring transactions:', error)
+      throw error
+    }
+
+    return data
+  },
+
   async getTransactionsForPeriod(start: Date, end: Date): Promise<Transacao[]> {
     // Select respects RLS
     const { data, error } = await supabase
