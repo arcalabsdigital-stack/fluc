@@ -12,6 +12,7 @@ import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import Users from './pages/Users'
 import History from './pages/History'
+import Search from './pages/Search'
 import { TransactionProvider } from '@/stores/useTransactionStore'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="/help" element={<Help />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/history" element={<History />} />
+                <Route path="/search" element={<Search />} />
               </Route>
             </Route>
 

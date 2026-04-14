@@ -23,10 +23,18 @@ export function Header() {
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname])
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchQuery('')
+    }
+  }
 
   const userName =
     profile?.full_name || user?.user_metadata?.full_name || 'Usuário'
@@ -73,6 +81,9 @@ export function Header() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
           <Input
             placeholder="Buscar..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
             className="pl-9 sm:pl-10 bg-white border-transparent shadow-sm rounded-full h-9 sm:h-11 text-sm focus-visible:ring-1 focus-visible:ring-gray-200 w-full transition-all"
           />
         </div>
