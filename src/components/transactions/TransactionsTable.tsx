@@ -92,9 +92,9 @@ export function TransactionsTable({
         </div>
       </div>
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+        <Table wrapperClassName="max-h-[calc(100vh-280px)] min-h-[300px]">
+          <TableHeader className="sticky top-0 z-20 bg-gray-50 shadow-sm">
+            <TableRow className="bg-gray-50 hover:bg-gray-50">
               <TableHead className="w-[120px] lg:w-[100px] lg:whitespace-nowrap">
                 Data
               </TableHead>
@@ -113,14 +113,17 @@ export function TransactionsTable({
               <TableHead className="lg:w-[140px] lg:whitespace-nowrap lg:truncate">
                 Forma de Pagamento
               </TableHead>
-              <TableHead className="w-[100px] text-right lg:whitespace-nowrap">
+              <TableHead className="w-[100px] text-right lg:whitespace-nowrap sticky right-0 z-30 bg-gray-50 shadow-[-1px_0_0_#e5e7eb]">
                 Ações
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((transaction) => (
-              <TableRow key={transaction.id}>
+              <TableRow
+                key={transaction.id}
+                className="group bg-white hover:bg-slate-50"
+              >
                 <TableCell className="font-medium text-gray-600 lg:whitespace-nowrap">
                   {format(new Date(transaction.data), 'dd/MM/yyyy')}
                 </TableCell>
@@ -168,7 +171,7 @@ export function TransactionsTable({
                 >
                   {transaction.forma_pagamento_id}
                 </TableCell>
-                <TableCell className="text-right lg:whitespace-nowrap">
+                <TableCell className="text-right lg:whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 shadow-[-1px_0_0_#e5e7eb] transition-colors">
                   <div className="flex items-center justify-end gap-2">
                     <Button
                       variant="ghost"
