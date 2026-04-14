@@ -97,7 +97,7 @@ const Index = () => {
           {[1, 2, 3, 4].map((i) => (
             <Skeleton
               key={i}
-              className="h-[120px] sm:h-[140px] rounded-2xl sm:rounded-3xl"
+              className="h-[120px] sm:h-[140px] lg:h-auto lg:min-h-[140px] rounded-2xl sm:rounded-3xl"
             />
           ))}
         </div>
@@ -118,7 +118,10 @@ const Index = () => {
       {/* KPI Row */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
         {kpiData.map((kpi, index) => (
-          <div key={index} className="h-[120px] sm:h-[140px]">
+          <div
+            key={index}
+            className="h-[120px] sm:h-[140px] lg:h-auto lg:min-h-[140px]"
+          >
             <KPICard data={kpi} />
           </div>
         ))}

@@ -31,9 +31,9 @@ export function KPICard({ data }: KPICardProps) {
   }
 
   return (
-    <Card className="rounded-2xl sm:rounded-3xl border-none shadow-sm hover:scale-[1.02] transition-transform duration-300 h-full">
-      <CardContent className="p-3 sm:p-6 flex justify-between items-center h-full">
-        <div className="flex flex-col justify-between h-full gap-2 sm:gap-4 w-full overflow-hidden">
+    <Card className="rounded-2xl sm:rounded-3xl border-none shadow-sm hover:scale-[1.02] transition-transform duration-300 h-full lg:h-auto lg:min-h-[140px]">
+      <CardContent className="p-3 sm:p-6 flex justify-between items-center h-full lg:h-auto lg:min-h-full">
+        <div className="flex flex-col justify-between h-full lg:h-auto gap-2 sm:gap-4 w-full overflow-hidden">
           <h3 className="text-xs sm:text-sm font-medium text-gray-500 truncate pr-2">
             {data.label}
           </h3>
@@ -49,7 +49,7 @@ export function KPICard({ data }: KPICardProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap lg:mt-auto">
             <div
               className={cn(
                 'text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-medium flex items-center gap-0.5 sm:gap-1',

@@ -95,33 +95,51 @@ export function TransactionsTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-              <TableHead className="w-[120px]">Data</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead className="text-right">Valor</TableHead>
-              <TableHead>Forma de Pagamento</TableHead>
-              <TableHead className="w-[100px] text-right">Ações</TableHead>
+              <TableHead className="w-[120px] lg:w-[100px] lg:whitespace-nowrap">
+                Data
+              </TableHead>
+              <TableHead className="lg:max-w-[250px] lg:truncate">
+                Descrição
+              </TableHead>
+              <TableHead className="lg:w-[130px] lg:whitespace-nowrap">
+                Categoria
+              </TableHead>
+              <TableHead className="lg:w-[100px] lg:whitespace-nowrap">
+                Tipo
+              </TableHead>
+              <TableHead className="text-right lg:w-[110px] lg:whitespace-nowrap">
+                Valor
+              </TableHead>
+              <TableHead className="lg:w-[140px] lg:whitespace-nowrap lg:truncate">
+                Forma de Pagamento
+              </TableHead>
+              <TableHead className="w-[100px] text-right lg:whitespace-nowrap">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((transaction) => (
               <TableRow key={transaction.id}>
-                <TableCell className="font-medium text-gray-600">
+                <TableCell className="font-medium text-gray-600 lg:whitespace-nowrap">
                   {format(new Date(transaction.data), 'dd/MM/yyyy')}
                 </TableCell>
-                <TableCell className="font-semibold text-gray-900">
+                <TableCell
+                  className="font-semibold text-gray-900 lg:max-w-[250px] lg:truncate"
+                  title={transaction.descricao}
+                >
                   {transaction.descricao}
                 </TableCell>
-                <TableCell>
+                <TableCell className="lg:whitespace-nowrap">
                   <Badge
                     variant="secondary"
-                    className="font-normal text-xs bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    className="font-normal text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 lg:truncate lg:max-w-[110px]"
+                    title={getCategoryName(transaction.categoria_id)}
                   >
                     {getCategoryName(transaction.categoria_id)}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="lg:whitespace-nowrap">
                   <Badge
                     variant="outline"
                     className={
@@ -135,7 +153,7 @@ export function TransactionsTable({
                 </TableCell>
                 <TableCell
                   className={
-                    'text-right font-bold ' +
+                    'text-right font-bold lg:whitespace-nowrap ' +
                     (transaction.tipo_id === TipoTransacao.Receita
                       ? 'text-green-600'
                       : 'text-gray-900')
@@ -144,10 +162,13 @@ export function TransactionsTable({
                   {transaction.tipo_id === TipoTransacao.Despesa ? '-' : '+'}
                   {formatCurrency(transaction.valor)}
                 </TableCell>
-                <TableCell className="text-gray-500 text-sm">
+                <TableCell
+                  className="text-gray-500 text-sm lg:whitespace-nowrap lg:truncate lg:max-w-[130px]"
+                  title={transaction.forma_pagamento_id}
+                >
                   {transaction.forma_pagamento_id}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right lg:whitespace-nowrap">
                   <div className="flex items-center justify-end gap-2">
                     <Button
                       variant="ghost"
