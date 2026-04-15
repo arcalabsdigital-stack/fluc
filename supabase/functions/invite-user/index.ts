@@ -19,8 +19,9 @@ Deno.serve(async (req) => {
       throw new Error('Missing Authorization header')
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
+      supabaseUrl,
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } },
     )
@@ -38,19 +39,57 @@ Deno.serve(async (req) => {
       .single()
 
     if (profile?.role !== 'admin') {
-      throw new Error('Only admins can invite users')
+      throw new Error('Apenas administradores podem gerenciar convites')
     }
 
-    const { email, fullName, role, password } = await req.json()
+    const body = await req.json()
+    const { action, email, fullName, role, password, userId } = body
 
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
+
+    if (action === 'resend') {
+      if (!userId) throw new Error('ID do usuário não fornecido')
+
+      const { data: targetUser, error: getUserError } =
+        await supabaseAdmin.auth.admin.getUserById(userId)
+      if (getUserError || !targetUser?.user)
+        throw new Error('Usuário não encontrado')
+
+      const tempPassword = targetUser.user.user_metadata?.temp_password
+      if (!tempPassword)
+        throw new Error(
+          'Não foi possível encontrar a senha inicial para reenvio. O usuário pode já ter alterado a senha.',
+        )
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/welcome-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        },
+        body: JSON.stringify({
+          email: targetUser.user.email,
+          name:
+            targetUser.user.user_metadata?.full_name || targetUser.user.email,
+          password: tempPassword,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Erro ao disparar o e-mail de boas-vindas')
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    // Default action: invite
     if (!password) {
       throw new Error('A senha inicial é obrigatória')
     }
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    )
 
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
@@ -73,9 +112,17 @@ Deno.serve(async (req) => {
       status: 200,
     })
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    let errorMessage = error.message || 'Erro desconhecido'
+    if (
+      errorMessage.includes('User already registered') ||
+      errorMessage.includes('already exists')
+    ) {
+      errorMessage = 'Este e-mail já está cadastrado.'
+    }
+    // Return 200 so the frontend can read the JSON body
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: 200,
     })
   }
 })

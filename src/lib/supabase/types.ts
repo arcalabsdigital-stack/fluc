@@ -191,6 +191,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean
+          must_change_password: boolean
           organization_id: string
           role: string
           updated_at: string | null
@@ -201,6 +202,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_active?: boolean
+          must_change_password?: boolean
           organization_id: string
           role?: string
           updated_at?: string | null
@@ -211,6 +213,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean
+          must_change_password?: boolean
           organization_id?: string
           role?: string
           updated_at?: string | null
@@ -546,6 +549,7 @@ export const Constants = {
 //   avatar_url: text (nullable)
 //   organization_id: uuid (not null)
 //   is_active: boolean (not null, default: true)
+//   must_change_password: boolean (not null, default: false)
 // Table: recurring_transactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   organization_id: uuid (not null)
@@ -648,20 +652,20 @@ export const Constants = {
 //     USING: (organization_id = get_current_user_org_id())
 // Table: recurring_transactions
 //   Policy "Users can delete recurring in their org" (DELETE, PERMISSIVE) roles={public}
-//     USING: (organization_id = get_current_user_org_id())
+//     USING: ((organization_id = get_current_user_org_id()) AND (get_user_role() <> 'visitante'::text))
 //   Policy "Users can insert recurring in their org" (INSERT, PERMISSIVE) roles={public}
-//     WITH CHECK: (organization_id = get_current_user_org_id())
+//     WITH CHECK: ((organization_id = get_current_user_org_id()) AND (get_user_role() <> 'visitante'::text))
 //   Policy "Users can update recurring in their org" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (organization_id = get_current_user_org_id())
+//     USING: ((organization_id = get_current_user_org_id()) AND (get_user_role() <> 'visitante'::text))
 //   Policy "Users can view recurring in their org" (SELECT, PERMISSIVE) roles={public}
 //     USING: (organization_id = get_current_user_org_id())
 // Table: transactions
 //   Policy "Users can delete transactions in their org" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (organization_id = get_current_user_org_id())
+//     USING: ((organization_id = get_current_user_org_id()) AND (get_user_role() <> 'visitante'::text))
 //   Policy "Users can insert transactions in their org" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (organization_id = get_current_user_org_id())
+//     WITH CHECK: ((organization_id = get_current_user_org_id()) AND (get_user_role() <> 'visitante'::text))
 //   Policy "Users can update transactions in their org" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (organization_id = get_current_user_org_id())
+//     USING: ((organization_id = get_current_user_org_id()) AND (get_user_role() <> 'visitante'::text))
 //   Policy "Users view transactions in their org" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (organization_id = get_current_user_org_id())
 
@@ -813,8 +817,10 @@ export const Constants = {
 //     org_id UUID;
 //     org_name TEXT;
 //     new_role TEXT;
+//     v_must_change_password BOOLEAN;
 //   BEGIN
 //     org_name := NEW.raw_user_meta_data->>'organization_name';
+//     v_must_change_password := COALESCE((NEW.raw_user_meta_data->>'must_change_password')::boolean, false);
 //
 //     IF org_name IS NOT NULL THEN
 //       INSERT INTO public.organizations (name) VALUES (org_name) RETURNING id INTO org_id;
@@ -832,13 +838,14 @@ export const Constants = {
 //       END IF;
 //     END IF;
 //
-//     INSERT INTO public.profiles (id, full_name, role, organization_id, is_active)
+//     INSERT INTO public.profiles (id, full_name, role, organization_id, is_active, must_change_password)
 //     VALUES (
 //       NEW.id,
 //       NEW.raw_user_meta_data->>'full_name',
 //       new_role,
 //       org_id,
-//       true
+//       true,
+//       v_must_change_password
 //     )
 //     ON CONFLICT (id) DO NOTHING;
 //
@@ -989,18 +996,18 @@ export const Constants = {
 //   AS $function$
 //   DECLARE
 //     v_email text;
+//     v_temp_password text;
 //   BEGIN
-//     -- Busca o email do usuário recém-criado na tabela auth.users usando o ID do novo profile
-//     SELECT email INTO v_email FROM auth.users WHERE id = NEW.id;
+//     SELECT email, raw_user_meta_data->>'temp_password' INTO v_email, v_temp_password FROM auth.users WHERE id = NEW.id;
 //
 //     IF v_email IS NOT NULL THEN
-//       -- Faz uma requisição HTTP POST assíncrona para a Edge Function de boas-vindas com cabeçalho de autorização
 //       PERFORM net.http_post(
 //         url := 'https://hwigxdigeurmrgovdhgi.supabase.co/functions/v1/welcome-email',
 //         headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3aWd4ZGlnZXVybXJnb3ZkaGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDA1MzQsImV4cCI6MjA5MTA3NjUzNH0.N6gXdXpjuAOP9cUo1geVOduklJrydA8j8NTW1Erd-xU"}'::jsonb,
 //         body := jsonb_build_object(
 //           'email', v_email,
-//           'name', COALESCE(NEW.full_name, 'Usuário')
+//           'name', COALESCE(NEW.full_name, 'Usuário'),
+//           'password', v_temp_password
 //         )
 //       );
 //     END IF;

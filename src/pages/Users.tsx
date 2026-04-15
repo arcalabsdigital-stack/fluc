@@ -26,12 +26,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Mail } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
 
-type ExtendedUserProfile = UserProfile & { is_active?: boolean }
+type ExtendedUserProfile = UserProfile & {
+  is_active?: boolean
+  must_change_password?: boolean
+}
 
 export default function Users() {
   const { role, user: currentUser } = useAuth()
   const [isInviting, setIsInviting] = useState(false)
+  const [resendingId, setResendingId] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [invitePassword, setInvitePassword] = useState('')
@@ -85,6 +95,18 @@ export default function Users() {
     } catch (error) {
       console.error('Error updating role:', error)
       toast.error('Erro ao atualizar função')
+    }
+  }
+
+  const handleResendInvite = async (userId: string) => {
+    setResendingId(userId)
+    try {
+      await userService.resendInvite(userId)
+      toast.success('Convite reenviado com sucesso!')
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao reenviar convite')
+    } finally {
+      setResendingId(null)
     }
   }
 
@@ -307,6 +329,22 @@ export default function Users() {
                         </Select>
                       </div>
                       <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
+                        {user.must_change_password && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                                onClick={() => handleResendInvite(user.id)}
+                                disabled={resendingId === user.id}
+                              >
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Reenviar Convite</TooltipContent>
+                          </Tooltip>
+                        )}
                         <Switch
                           checked={user.is_active !== false}
                           onCheckedChange={(checked) =>

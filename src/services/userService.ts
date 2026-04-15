@@ -37,7 +37,16 @@ export const userService = {
     password?: string,
   ): Promise<void> {
     const { data, error } = await supabase.functions.invoke('invite-user', {
-      body: { email, fullName, role, password },
+      body: { action: 'invite', email, fullName, role, password },
+    })
+
+    if (error) throw error
+    if (data?.error) throw new Error(data.error)
+  },
+
+  async resendInvite(userId: string): Promise<void> {
+    const { data, error } = await supabase.functions.invoke('invite-user', {
+      body: { action: 'resend', userId },
     })
 
     if (error) throw error
