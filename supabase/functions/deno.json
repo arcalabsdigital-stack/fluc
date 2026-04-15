@@ -1,7 +1,7 @@
 {
   "_versions": {
     "chat-agent": 2,
-    "welcome-email": 8,
-    "invite-user": 2
+    "welcome-email": 9,
+    "invite-user": 3
   }
 }
