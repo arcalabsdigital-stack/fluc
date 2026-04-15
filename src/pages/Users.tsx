@@ -34,6 +34,7 @@ export default function Users() {
   const [isInviting, setIsInviting] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
+  const [invitePassword, setInvitePassword] = useState('')
   const [inviteRole, setInviteRole] = useState<Role>('colaborador')
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [users, setUsers] = useState<ExtendedUserProfile[]>([])
@@ -89,17 +90,27 @@ export default function Users() {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inviteEmail || !inviteName) {
-      toast.error('Preencha todos os campos')
+    if (!inviteEmail || !inviteName || !invitePassword) {
+      toast.error('Preencha todos os campos, incluindo a senha inicial')
+      return
+    }
+    if (invitePassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres')
       return
     }
     setIsInviting(true)
     try {
-      await userService.inviteUser(inviteEmail, inviteName, inviteRole)
+      await userService.inviteUser(
+        inviteEmail,
+        inviteName,
+        inviteRole,
+        invitePassword,
+      )
       toast.success('Convite enviado com sucesso!')
       setShowInviteForm(false)
       setInviteEmail('')
       setInviteName('')
+      setInvitePassword('')
       setInviteRole('colaborador')
       const data = await userService.getAllUsers()
       setUsers(data)
@@ -157,7 +168,18 @@ export default function Users() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="inviteRole">Função</Label>
+              <Label htmlFor="invitePassword">Senha Inicial</Label>
+              <Input
+                id="invitePassword"
+                type="text"
+                value={invitePassword}
+                onChange={(e) => setInvitePassword(e.target.value)}
+                placeholder="Ex: Senha@123"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="inviteRole">Função</Label>{' '}
               <Select
                 value={inviteRole}
                 onValueChange={(val) => setInviteRole(val as Role)}
@@ -172,10 +194,16 @@ export default function Users() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" disabled={isInviting}>
-              {isInviting ? 'Enviando...' : 'Enviar Convite'}
-            </Button>
-          </form>
+            <div className="md:col-span-4 flex justify-end mt-2">
+              <Button
+                type="submit"
+                disabled={isInviting}
+                className="w-full md:w-auto"
+              >
+                {isInviting ? 'Enviando...' : 'Enviar Convite e Criar Acesso'}
+              </Button>
+            </div>
+          </form>{' '}
         </div>
       )}
 

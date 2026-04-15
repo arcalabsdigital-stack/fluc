@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, name } = await req.json()
+    const { email, name, password } = await req.json()
 
     if (!RESEND_API_KEY) {
       console.error('RESEND_API_KEY is not set')
@@ -76,6 +76,19 @@ Deno.serve(async (req) => {
                 <p class="faq-a">Com certeza. O Fluc utiliza criptografia de ponta a ponta e as melhores práticas de segurança do mercado para garantir que suas informações financeiras estejam sempre protegidas.</p>
               </div>
             </div>
+            
+            ${
+              password
+                ? `
+            <div class="contact" style="background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e; text-align: left;">
+              <strong style="font-size: 16px;">Suas credenciais de acesso:</strong><br><br>
+              E-mail: <strong>${email}</strong><br>
+              Senha Temporária: <strong>${password}</strong><br><br>
+              <em>⚠️ Por motivos de segurança, você será solicitado a alterar esta senha no seu primeiro acesso.</em>
+            </div>
+            `
+                : ''
+            }
 
             <center>
               <a href="https://gestao-financeira-clone-0ca8c.goskip.app" class="btn">Acessar o Fluc Agora</a>

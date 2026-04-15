@@ -14,6 +14,7 @@ import {
   Lock,
   Mail,
   RepeatIcon,
+  AlertTriangle,
 } from 'lucide-react'
 import { RecurringTransactionsSettings } from '@/components/settings/RecurringTransactionsSettings'
 
@@ -91,6 +92,13 @@ const Settings = () => {
       return
     }
 
+    const requirePasswordChange = profile?.must_change_password
+
+    if (requirePasswordChange && !password) {
+      toast.error('Você precisa definir uma nova senha para continuar.')
+      return
+    }
+
     try {
       setIsSaving(true)
 
@@ -116,9 +124,21 @@ const Settings = () => {
       if (password) {
         const { error: passwordError } = await supabase.auth.updateUser({
           password: password,
+          data: { temp_password: null }, // Clear temporary password if any
         })
 
         if (passwordError) throw passwordError
+
+        if (requirePasswordChange) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ must_change_password: false })
+            .eq('id', user.id)
+
+          if (profileError) throw profileError
+          updateProfileContext({ must_change_password: false })
+        }
+
         setPassword('')
         setConfirmPassword('')
         toast.success('Senha atualizada com sucesso!')
@@ -163,6 +183,7 @@ const Settings = () => {
           <TabsTrigger
             value="recurring"
             className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50"
+            disabled={profile?.must_change_password}
           >
             <RepeatIcon className="w-4 h-4 mr-2" />
             Gastos Recorrentes
@@ -170,9 +191,24 @@ const Settings = () => {
         </TabsList>
 
         <TabsContent value="profile" className="animate-fade-in">
+          {profile?.must_change_password && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 p-5 rounded-2xl mb-6 animate-fade-in-down">
+              <h3 className="font-bold flex items-center gap-2 text-lg">
+                <AlertTriangle className="h-5 w-5" />
+                Ação Necessária: Defina sua nova senha
+              </h3>
+              <p className="mt-2 text-amber-700">
+                Como este é seu primeiro acesso, por motivos de segurança, você
+                precisa definir uma nova senha definitiva antes de poder
+                utilizar o sistema e navegar por outras telas.
+              </p>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 sm:p-8">
               <form onSubmit={handleSaveProfile} className="space-y-8">
+                {' '}
                 {/* Avatar Section */}
                 <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
                   <div
@@ -214,7 +250,6 @@ const Settings = () => {
                     </p>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Personal Info Section */}
                   <div className="space-y-5">
@@ -258,7 +293,8 @@ const Settings = () => {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         required
-                      />
+                        disabled={profile?.must_change_password}
+                      />{' '}
                     </div>
                   </div>
 
@@ -279,10 +315,15 @@ const Settings = () => {
                       <Input
                         id="password"
                         type="password"
-                        placeholder="Deixe em branco para não alterar"
+                        placeholder={
+                          profile?.must_change_password
+                            ? 'Digite sua nova senha'
+                            : 'Deixe em branco para não alterar'
+                        }
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                      />
+                        required={profile?.must_change_password}
+                      />{' '}
                     </div>
 
                     <div className="space-y-2">
@@ -303,7 +344,6 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="pt-6 border-t border-gray-100 flex justify-end">
                   <Button
                     type="submit"

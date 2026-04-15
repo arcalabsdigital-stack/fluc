@@ -35,7 +35,11 @@ Deno.serve(async (req) => {
       throw new Error('Only admins can invite users')
     }
 
-    const { email, fullName, role } = await req.json()
+    const { email, fullName, role, password } = await req.json()
+
+    if (!password) {
+      throw new Error('A senha inicial é obrigatória')
+    }
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -43,11 +47,16 @@ Deno.serve(async (req) => {
     )
 
     const { data: newUser, error: createError } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        data: {
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
           full_name: fullName,
           organization_id: profile.organization_id,
           role: role,
+          must_change_password: true,
+          temp_password: password,
         },
       })
 

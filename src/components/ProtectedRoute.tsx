@@ -1,9 +1,9 @@
 import { useAuth } from '@/hooks/use-auth'
-import { Navigate, Outlet } from 'react-router-dom'
-import AccessDenied from '@/pages/AccessDenied'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 export const ProtectedRoute = () => {
-  const { session, loading, role } = useAuth()
+  const { session, loading, profile } = useAuth()
+  const location = useLocation()
 
   if (loading) {
     return (
@@ -17,8 +17,8 @@ export const ProtectedRoute = () => {
     return <Navigate to="/login" replace />
   }
 
-  if (role === 'visitante') {
-    return <AccessDenied />
+  if (profile?.must_change_password && location.pathname !== '/settings') {
+    return <Navigate to="/settings" replace />
   }
 
   return <Outlet />

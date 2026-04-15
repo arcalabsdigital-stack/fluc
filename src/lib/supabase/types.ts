@@ -190,6 +190,7 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          is_active: boolean
           organization_id: string
           role: string
           updated_at: string | null
@@ -199,6 +200,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          is_active?: boolean
           organization_id: string
           role?: string
           updated_at?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
           organization_id?: string
           role?: string
           updated_at?: string | null
@@ -542,6 +545,7 @@ export const Constants = {
 //   role: text (not null, default: 'visitante'::text)
 //   avatar_url: text (nullable)
 //   organization_id: uuid (not null)
+//   is_active: boolean (not null, default: true)
 // Table: recurring_transactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   organization_id: uuid (not null)
@@ -591,7 +595,7 @@ export const Constants = {
 // Table: organizations
 //   PRIMARY KEY organizations_pkey: PRIMARY KEY (id)
 // Table: profiles
-//   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id)
+//   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   FOREIGN KEY profiles_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
 //   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
 //   CHECK profiles_role_check: CHECK ((role = ANY (ARRAY['admin'::text, 'colaborador'::text, 'visitante'::text])))
@@ -710,7 +714,7 @@ export const Constants = {
 //    LANGUAGE sql
 //    SECURITY DEFINER
 //   AS $function$
-//     SELECT organization_id FROM public.profiles WHERE id = auth.uid();
+//     SELECT organization_id FROM public.profiles WHERE id = auth.uid() AND is_active = true;
 //   $function$
 //
 // FUNCTION get_dashboard_kpi(date)
@@ -795,7 +799,7 @@ export const Constants = {
 //    SET search_path TO 'public'
 //   AS $function$
 //   BEGIN
-//     RETURN (SELECT role FROM public.profiles WHERE id = auth.uid());
+//     RETURN (SELECT role FROM public.profiles WHERE id = auth.uid() AND is_active = true);
 //   END;
 //   $function$
 //
@@ -828,12 +832,13 @@ export const Constants = {
 //       END IF;
 //     END IF;
 //
-//     INSERT INTO public.profiles (id, full_name, role, organization_id)
+//     INSERT INTO public.profiles (id, full_name, role, organization_id, is_active)
 //     VALUES (
 //       NEW.id,
 //       NEW.raw_user_meta_data->>'full_name',
 //       new_role,
-//       org_id
+//       org_id,
+//       true
 //     )
 //     ON CONFLICT (id) DO NOTHING;
 //
@@ -850,7 +855,7 @@ export const Constants = {
 //   BEGIN
 //     RETURN EXISTS (
 //       SELECT 1 FROM public.profiles
-//       WHERE id = auth.uid() AND role = 'admin'
+//       WHERE id = auth.uid() AND role = 'admin' AND is_active = true
 //     );
 //   END;
 //   $function$

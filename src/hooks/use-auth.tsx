@@ -14,6 +14,7 @@ export interface Profile {
   role: string
   avatar_url: string | null
   organization_id: string
+  must_change_password?: boolean
   organizations?: {
     id: string
     name: string
@@ -34,6 +35,7 @@ interface AuthContextType {
   loading: boolean
   profile: Profile | null
   role: string | null
+  updateProfileContext: (updates: Partial<Profile>) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -126,9 +128,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
+  const updateProfileContext = (updates: Partial<Profile>) => {
+    setProfile((prev) => (prev ? { ...prev, ...updates } : null))
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, role, signUp, signIn, signOut, loading }}
+      value={{
+        user,
+        session,
+        profile,
+        role,
+        signUp,
+        signIn,
+        signOut,
+        loading,
+        updateProfileContext,
+      }}
     >
       {children}
     </AuthContext.Provider>

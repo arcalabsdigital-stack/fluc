@@ -29,12 +29,14 @@ interface TransactionsTableProps {
   data: Transacao[]
   onEdit: (transaction: Transacao) => void
   onImportSuccess?: () => void
+  isVisitor?: boolean
 }
 
 export function TransactionsTable({
   data,
   onEdit,
   onImportSuccess,
+  isVisitor = false,
 }: TransactionsTableProps) {
   const { categories, deleteTransaction } = useTransactionStore()
 
@@ -57,11 +59,13 @@ export function TransactionsTable({
   if (data.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="flex justify-end items-center flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <ImportTransactions onSuccess={onImportSuccess} />
+        {!isVisitor && (
+          <div className="flex justify-end items-center flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <ImportTransactions onSuccess={onImportSuccess} />
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex flex-col items-center justify-center py-12 text-center border rounded-xl bg-white shadow-sm">
           <p className="text-gray-500 mb-2">Nenhuma transação encontrada.</p>
           <p className="text-sm text-gray-400">
@@ -79,7 +83,7 @@ export function TransactionsTable({
           Total de {data.length} transações
         </div>
         <div className="flex items-center gap-2">
-          <ImportTransactions onSuccess={onImportSuccess} />
+          {!isVisitor && <ImportTransactions onSuccess={onImportSuccess} />}
           <Button
             variant="outline"
             size="sm"
@@ -113,9 +117,11 @@ export function TransactionsTable({
               <TableHead className="lg:w-[140px] lg:whitespace-nowrap lg:truncate">
                 Forma de Pagamento
               </TableHead>
-              <TableHead className="w-[100px] text-right lg:whitespace-nowrap sticky right-0 z-30 bg-gray-50 shadow-[-1px_0_0_#e5e7eb]">
-                Ações
-              </TableHead>
+              {!isVisitor && (
+                <TableHead className="w-[100px] text-right lg:whitespace-nowrap sticky right-0 z-30 bg-gray-50 shadow-[-1px_0_0_#e5e7eb]">
+                  Ações
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -171,52 +177,54 @@ export function TransactionsTable({
                 >
                   {transaction.forma_pagamento_id}
                 </TableCell>
-                <TableCell className="text-right lg:whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 shadow-[-1px_0_0_#e5e7eb] transition-colors">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                      onClick={() => onEdit(transaction)}
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Editar</span>
-                    </Button>
+                {!isVisitor && (
+                  <TableCell className="text-right lg:whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 shadow-[-1px_0_0_#e5e7eb] transition-colors">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => onEdit(transaction)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                      </Button>
 
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Excluir</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Tem certeza absoluta?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta ação não pode ser desfeita. Isso excluirá
-                            permanentemente o registro da transação.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-red-600 hover:bg-red-700"
-                            onClick={() => deleteTransaction(transaction.id)}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                           >
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Excluir</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Tem certeza absoluta?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação não pode ser desfeita. Isso excluirá
+                              permanentemente o registro da transação.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-red-600 hover:bg-red-700"
+                              onClick={() => deleteTransaction(transaction.id)}
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

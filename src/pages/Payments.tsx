@@ -56,11 +56,7 @@ const Payments = () => {
     setIsFormOpen(true)
   }
 
-  // Double check for visitante logic
-  // "If the role is visitante, it must display the message: 'Você não tem acesso. Solicite para um administrador.'"
-  if (role === 'visitante') {
-    return <AccessDenied />
-  }
+  const isVisitor = role === 'visitante'
 
   // Show loading state if loading is true
   const showLoading = isLoading
@@ -76,18 +72,19 @@ const Payments = () => {
             Gerencie seus registros financeiros e histórico.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <ImportTransactions onSuccess={handleImportSuccess} />
-          <Button
-            onClick={handleCreate}
-            className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Transação
-          </Button>
-        </div>
+        {!isVisitor && (
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <ImportTransactions onSuccess={handleImportSuccess} />
+            <Button
+              onClick={handleCreate}
+              className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Transação
+            </Button>
+          </div>
+        )}
       </div>
-
       <TransactionFilters filters={filters} setFilters={setFilters} />
 
       {showLoading ? (
@@ -99,9 +96,9 @@ const Payments = () => {
           data={transactions}
           onEdit={handleEdit}
           onImportSuccess={handleImportSuccess}
+          isVisitor={isVisitor}
         />
       )}
-
       <TransactionForm
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
