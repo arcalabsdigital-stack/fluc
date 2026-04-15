@@ -25,6 +25,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+
+type ExtendedUserProfile = UserProfile & { is_active?: boolean }
 
 export default function Users() {
   const { role, user: currentUser } = useAuth()
@@ -33,7 +36,7 @@ export default function Users() {
   const [inviteName, setInviteName] = useState('')
   const [inviteRole, setInviteRole] = useState<Role>('colaborador')
   const [showInviteForm, setShowInviteForm] = useState(false)
-  const [users, setUsers] = useState<UserProfile[]>([])
+  const [users, setUsers] = useState<ExtendedUserProfile[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -53,6 +56,23 @@ export default function Users() {
 
     fetchUsers()
   }, [role])
+
+  const handleStatusChange = async (userId: string, isActive: boolean) => {
+    try {
+      await userService.updateUserStatus(userId, isActive)
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, is_active: isActive } : u)),
+      )
+      toast.success(
+        isActive
+          ? 'Usuário ativado com sucesso'
+          : 'Usuário desativado com sucesso',
+      )
+    } catch (error) {
+      console.error('Error updating status:', error)
+      toast.error('Erro ao atualizar status do usuário')
+    }
+  }
 
   const handleRoleChange = async (userId: string, newRole: Role) => {
     try {
@@ -171,13 +191,19 @@ export default function Users() {
             <TableHeader>
               <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
                 <TableHead>Usuário</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Função Atual</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow
+                  key={user.id}
+                  className={
+                    user.is_active === false ? 'opacity-70 bg-gray-50' : ''
+                  }
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9 border border-gray-200">
@@ -205,6 +231,18 @@ export default function Users() {
                     <Badge
                       variant="outline"
                       className={
+                        user.is_active !== false
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : 'bg-red-50 text-red-700 border-red-200'
+                      }
+                    >
+                      {user.is_active !== false ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
                         user.role === 'admin'
                           ? 'bg-purple-50 text-purple-700 border-purple-200'
                           : user.role === 'colaborador'
@@ -216,25 +254,55 @@ export default function Users() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="w-[180px]">
-                      <Select
-                        defaultValue={user.role}
-                        onValueChange={(val) =>
-                          handleRoleChange(user.id, val as Role)
-                        }
-                        disabled={user.id === currentUser?.id} // Prevent changing own role to avoid lockout
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Selecione a função" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Administrador</SelectItem>
-                          <SelectItem value="colaborador">
-                            Colaborador
-                          </SelectItem>
-                          <SelectItem value="visitante">Visitante</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="flex items-center gap-4">
+                      <div className="w-[140px]">
+                        <Select
+                          defaultValue={user.role}
+                          onValueChange={(val) =>
+                            handleRoleChange(user.id, val as Role)
+                          }
+                          disabled={
+                            user.id === currentUser?.id ||
+                            user.is_active === false
+                          }
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="Função" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Administrador</SelectItem>
+                            <SelectItem value="colaborador">
+                              Colaborador
+                            </SelectItem>
+                            <SelectItem value="visitante">Visitante</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-2 border-l pl-4 border-gray-200">
+                        <Switch
+                          checked={user.is_active !== false}
+                          onCheckedChange={(checked) =>
+                            handleStatusChange(user.id, checked)
+                          }
+                          disabled={user.id === currentUser?.id}
+                        />
+                        <Label
+                          className={
+                            user.id === currentUser?.id
+                              ? 'text-xs text-gray-400 hidden sm:inline-block'
+                              : 'text-xs text-gray-500 cursor-pointer hidden sm:inline-block'
+                          }
+                          onClick={() => {
+                            if (user.id !== currentUser?.id)
+                              handleStatusChange(
+                                user.id,
+                                user.is_active === false,
+                              )
+                          }}
+                        >
+                          {user.is_active !== false ? 'Desativar' : 'Ativar'}
+                        </Label>
+                      </div>
                     </div>
                   </TableCell>
                 </TableRow>

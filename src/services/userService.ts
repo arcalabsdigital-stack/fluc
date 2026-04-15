@@ -21,6 +21,15 @@ export const userService = {
     if (error) throw error
   },
 
+  async updateUserStatus(userId: string, isActive: boolean): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_active: isActive })
+      .eq('id', userId)
+
+    if (error) throw error
+  },
+
   async inviteUser(email: string, fullName: string, role: Role): Promise<void> {
     const { data, error } = await supabase.functions.invoke('invite-user', {
       body: { email, fullName, role },
