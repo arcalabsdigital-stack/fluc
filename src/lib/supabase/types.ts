@@ -1012,39 +1012,6 @@ export const Constants = {
 //   END;
 //   $function$
 //
-// FUNCTION send_welcome_email_webhook()
-//   CREATE OR REPLACE FUNCTION public.send_welcome_email_webhook()
-//    RETURNS trigger
-//    LANGUAGE plpgsql
-//    SECURITY DEFINER
-//   AS $function$
-//   DECLARE
-//     v_email text;
-//     v_temp_password text;
-//   BEGIN
-//     BEGIN
-//       v_email := NEW.email;
-//       v_temp_password := NEW.raw_user_meta_data->>'temp_password';
-//
-//       IF v_email IS NOT NULL THEN
-//         PERFORM net.http_post(
-//           url := 'https://hwigxdigeurmrgovdhgi.supabase.co/functions/v1/welcome-email',
-//           headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3aWd4ZGlnZXVybXJnb3ZkaGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDA1MzQsImV4cCI6MjA5MTA3NjUzNH0.N6gXdXpjuAOP9cUo1geVOduklJrydA8j8NTW1Erd-xU"}'::jsonb,
-//           body := jsonb_build_object(
-//             'email', v_email,
-//             'name', COALESCE(NEW.raw_user_meta_data->>'full_name', 'Usuário'),
-//             'password', v_temp_password
-//           )
-//         );
-//       END IF;
-//     EXCEPTION WHEN OTHERS THEN
-//       RAISE WARNING 'send_welcome_email_webhook failed: %', SQLERRM;
-//     END;
-//
-//     RETURN NEW;
-//   END;
-//   $function$
-//
 // FUNCTION set_org_id_on_insert()
 //   CREATE OR REPLACE FUNCTION public.set_org_id_on_insert()
 //    RETURNS trigger

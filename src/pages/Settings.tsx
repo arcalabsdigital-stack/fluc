@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import { RecurringTransactionsSettings } from '@/components/settings/RecurringTr
 
 const Settings = () => {
   const { user, profile, updateProfileContext } = useAuth()
+  const navigate = useNavigate()
   const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -124,7 +126,7 @@ const Settings = () => {
       if (password) {
         const { error: passwordError } = await supabase.auth.updateUser({
           password: password,
-          data: { temp_password: null }, // Clear temporary password if any
+          data: { temp_password: null, must_change_password: false }, // Clear temporary password and update metadata
         })
 
         if (passwordError) throw passwordError
@@ -137,14 +139,18 @@ const Settings = () => {
 
           if (profileError) throw profileError
           updateProfileContext({ must_change_password: false })
+
+          toast.success('Senha atualizada e perfil salvo com sucesso!')
+          navigate('/', { replace: true })
+          return
         }
 
         setPassword('')
         setConfirmPassword('')
         toast.success('Senha atualizada com sucesso!')
+      } else {
+        toast.success('Perfil salvo com sucesso!')
       }
-
-      toast.success('Perfil salvo com sucesso!')
     } catch (error: any) {
       console.error('Error updating profile:', error)
       toast.error(error.message || 'Erro ao salvar o perfil')
