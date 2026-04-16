@@ -91,6 +91,10 @@ Deno.serve(async (req) => {
       throw new Error('A senha inicial é obrigatória')
     }
 
+    if (!profile.organization_id) {
+      throw new Error('Organização do administrador não encontrada')
+    }
+
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
@@ -107,6 +111,49 @@ Deno.serve(async (req) => {
 
     if (createError) throw createError
 
+    // Garante atomicidade: insere o profile diretamente da edge function
+    // Usa upsert para não conflitar caso o trigger "on_auth_user_created" dispare primeiro
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .upsert({
+        id: newUser.user.id,
+        full_name: fullName,
+        organization_id: profile.organization_id,
+        role: role,
+        is_active: true,
+        must_change_password: true,
+      })
+
+    if (profileError) {
+      // Rollback na criação de usuário caso a inserção do profile falhe (evita usuários órfãos)
+      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+      throw new Error(
+        `Erro ao criar perfil do usuário: ${profileError.message}`,
+      )
+    }
+
+    // Dispara o email de boas vindas diretamente, isolando falhas
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/welcome-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        },
+        body: JSON.stringify({
+          email,
+          name: fullName,
+          password,
+        }),
+      })
+
+      if (!res.ok) {
+        console.error('Failed to send welcome email via edge function')
+      }
+    } catch (e) {
+      console.error('Exception sending welcome email:', e)
+    }
+
     return new Response(JSON.stringify({ success: true, user: newUser.user }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
@@ -119,10 +166,11 @@ Deno.serve(async (req) => {
     ) {
       errorMessage = 'Este e-mail já está cadastrado.'
     }
-    // Return 200 so the frontend can read the JSON body
+
+    // Retorna status 400 para que o frontend lide corretamente e identifique a mensagem de erro
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status: 400,
     })
   }
 })

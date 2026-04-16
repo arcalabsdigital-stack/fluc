@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabase/client'
 import { UserProfile, Role } from '@/lib/types'
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
+
 export const userService = {
   async getAllUsers(): Promise<UserProfile[]> {
     const { data, error } = await supabase
@@ -36,20 +38,44 @@ export const userService = {
     role: Role,
     password?: string,
   ): Promise<void> {
-    const { data, error } = await supabase.functions.invoke('invite-user', {
-      body: { action: 'invite', email, fullName, role, password },
+    const { data: sessionData } = await supabase.auth.getSession()
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/invite-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
+      },
+      body: JSON.stringify({
+        action: 'invite',
+        email,
+        fullName,
+        role,
+        password,
+      }),
     })
 
-    if (error) throw error
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro ao enviar convite')
+    }
     if (data?.error) throw new Error(data.error)
   },
 
   async resendInvite(userId: string): Promise<void> {
-    const { data, error } = await supabase.functions.invoke('invite-user', {
-      body: { action: 'resend', userId },
+    const { data: sessionData } = await supabase.auth.getSession()
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/invite-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
+      },
+      body: JSON.stringify({ action: 'resend', userId }),
     })
 
-    if (error) throw error
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro ao reenviar convite')
+    }
     if (data?.error) throw new Error(data.error)
   },
 }
