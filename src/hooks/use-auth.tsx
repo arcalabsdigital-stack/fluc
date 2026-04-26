@@ -29,6 +29,7 @@ interface AuthContextType {
     password: string,
     fullName: string,
     organizationName: string,
+    plan?: string,
   ) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
@@ -99,6 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     password: string,
     fullName: string,
     organizationName: string,
+    plan?: string,
   ) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -109,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           full_name: fullName,
           organization_name: organizationName,
           company_name: organizationName,
+          ...(plan ? { plan } : {}),
         },
       },
     })

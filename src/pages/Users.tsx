@@ -36,6 +36,7 @@ import {
 type ExtendedUserProfile = UserProfile & {
   is_active?: boolean
   must_change_password?: boolean
+  avatar_url?: string | null
 }
 
 export default function Users() {
@@ -258,7 +259,7 @@ export default function Users() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9 border border-gray-200">
                         <AvatarImage
-                          src={`https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${user.id}`}
+                          src={user.avatar_url || undefined}
                           alt={user.full_name || 'User'}
                         />
                         <AvatarFallback>

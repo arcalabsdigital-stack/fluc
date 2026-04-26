@@ -162,9 +162,7 @@ const Settings = () => {
   const userInitials = (profile?.full_name || user?.email || 'U')
     .substring(0, 2)
     .toUpperCase()
-  const avatarUrl =
-    profile?.avatar_url ||
-    `https://img.usecurling.com/ppl/medium?gender=male&seed=${user?.id}`
+  const avatarUrl = profile?.avatar_url
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 animate-fade-in-up">
@@ -223,7 +221,7 @@ const Settings = () => {
                   >
                     <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
                       <AvatarImage
-                        src={avatarUrl}
+                        src={avatarUrl || undefined}
                         alt={profile?.full_name || ''}
                         className="object-cover"
                       />

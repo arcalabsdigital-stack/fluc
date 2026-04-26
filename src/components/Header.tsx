@@ -39,9 +39,7 @@ export function Header() {
   const userName =
     profile?.full_name || user?.user_metadata?.full_name || 'Usuário'
   const userInitials = userName.substring(0, 2).toUpperCase()
-  const avatarUrl =
-    profile?.avatar_url ||
-    `https://img.usecurling.com/ppl/medium?gender=male&seed=${user?.id}`
+  const avatarUrl = profile?.avatar_url
 
   const getOrgName = () => {
     const org = profile?.organizations as any
@@ -117,7 +115,7 @@ export function Header() {
             <PopoverTrigger asChild>
               <Avatar className="h-10 w-10 border-2 border-white shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
                 <AvatarImage
-                  src={avatarUrl}
+                  src={avatarUrl || undefined}
                   alt={userName}
                   className="object-cover"
                 />
@@ -132,7 +130,7 @@ export function Header() {
                 <div className="flex items-center gap-3 p-2 mb-1">
                   <Avatar className="h-9 w-9 border border-gray-100">
                     <AvatarImage
-                      src={avatarUrl}
+                      src={avatarUrl || undefined}
                       alt={userName}
                       className="object-cover"
                     />
