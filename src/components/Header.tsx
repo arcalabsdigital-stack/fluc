@@ -36,9 +36,16 @@ export function Header() {
     }
   }
 
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 0 || parts[0] === '') return 'U'
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+
   const userName =
     profile?.full_name || user?.user_metadata?.full_name || 'Usuário'
-  const userInitials = userName.substring(0, 2).toUpperCase()
+  const userInitials = getInitials(userName)
   const avatarUrl = profile?.avatar_url
 
   const getOrgName = () => {

@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Mail } from 'lucide-react'
+import { Mail, Trash2 } from 'lucide-react'
 import {
   Tooltip,
   TooltipTrigger,
@@ -43,6 +43,7 @@ export default function Users() {
   const { role, user: currentUser } = useAuth()
   const [isInviting, setIsInviting] = useState(false)
   const [resendingId, setResendingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [invitePassword, setInvitePassword] = useState('')
@@ -109,6 +110,32 @@ export default function Users() {
     } finally {
       setResendingId(null)
     }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    if (
+      !confirm('Tem certeza que deseja excluir este usuário permanentemente?')
+    )
+      return
+
+    setDeletingId(userId)
+    try {
+      await userService.deleteUser(userId)
+      setUsers((prev) => prev.filter((u) => u.id !== userId))
+      toast.success('Usuário excluído com sucesso')
+    } catch (error: any) {
+      console.error('Error deleting user:', error)
+      toast.error(error.message || 'Erro ao excluir usuário')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 0 || parts[0] === '') return 'U'
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -263,9 +290,7 @@ export default function Users() {
                           alt={user.full_name || 'User'}
                         />
                         <AvatarFallback>
-                          {(user.full_name || 'U')
-                            .substring(0, 2)
-                            .toUpperCase()}
+                          {getInitials(user.full_name || 'Usuário')}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
@@ -369,6 +394,23 @@ export default function Users() {
                         >
                           {user.is_active !== false ? 'Desativar' : 'Ativar'}
                         </Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 ml-1"
+                              onClick={() => handleDeleteUser(user.id)}
+                              disabled={
+                                deletingId === user.id ||
+                                user.id === currentUser?.id
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Excluir Usuário</TooltipContent>
+                        </Tooltip>
                       </div>
                     </div>
                   </TableCell>

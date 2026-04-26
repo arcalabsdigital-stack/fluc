@@ -61,6 +61,24 @@ export const userService = {
     if (data?.error) throw new Error(data.error)
   },
 
+  async deleteUser(userId: string): Promise<void> {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/invite-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
+      },
+      body: JSON.stringify({ action: 'delete', userId }),
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.error || 'Erro ao excluir usuário')
+    }
+    if (data?.error) throw new Error(data.error)
+  },
+
   async resendInvite(userId: string): Promise<void> {
     const { data: sessionData } = await supabase.auth.getSession()
     const res = await fetch(`${SUPABASE_URL}/functions/v1/invite-user`, {
