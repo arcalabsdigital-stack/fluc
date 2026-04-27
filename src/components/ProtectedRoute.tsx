@@ -2,7 +2,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 export const ProtectedRoute = () => {
-  const { session, loading, profile } = useAuth()
+  const { session, loading, profile, subscription } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -21,7 +21,6 @@ export const ProtectedRoute = () => {
     return <Navigate to="/settings" replace />
   }
 
-  const { subscription } = useAuth()
   if (subscription) {
     const isExpired =
       subscription.status === 'canceled' ||

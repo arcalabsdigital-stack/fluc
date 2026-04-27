@@ -74,7 +74,7 @@ BEGIN
       AND is_active = true
   );
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.get_user_role()
  RETURNS text
@@ -90,7 +90,7 @@ BEGIN
       AND is_active = true
   ), 'visitante');
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
  RETURNS trigger
@@ -141,7 +141,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.create_new_workspace(
   p_name TEXT,
@@ -174,7 +174,7 @@ BEGIN
 
   RETURN v_org_id;
 END;
-$function$
+$function$;
 
 -- 8. Policies
 DROP POLICY IF EXISTS "Users can view profiles in their organization" ON public.profiles;
