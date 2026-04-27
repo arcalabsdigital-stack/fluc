@@ -6,13 +6,18 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
 export const userService = {
   async getAllUsers(): Promise<UserProfile[]> {
     const { data: sessionData } = await supabase.auth.getSession()
-    const { data: orgData } = await supabase.from('profiles').select('organization_id').eq('id', sessionData.session?.user.id).single()
-    
+    const { data: orgData } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', sessionData.session?.user.id)
+      .single()
+
     if (!orgData?.organization_id) return []
 
     const { data, error } = await supabase
       .from('user_workspaces')
-      .select(`
+      .select(
+        `
         user_id,
         role,
         is_active,
@@ -22,24 +27,29 @@ export const userService = {
           avatar_url,
           must_change_password
         )
-      `)
+      `,
+      )
       .eq('organization_id', orgData.organization_id)
 
     if (error) throw error
-    
+
     return data.map((item: any) => ({
       id: item.user_id,
       full_name: item.profiles.full_name,
       avatar_url: item.profiles.avatar_url,
       role: item.role,
       is_active: item.is_active,
-      must_change_password: item.profiles.must_change_password
+      must_change_password: item.profiles.must_change_password,
     })) as UserProfile[]
   },
 
   async updateUserRole(userId: string, newRole: Role): Promise<void> {
     const { data: sessionData } = await supabase.auth.getSession()
-    const { data: orgData } = await supabase.from('profiles').select('organization_id').eq('id', sessionData.session?.user.id).single()
+    const { data: orgData } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', sessionData.session?.user.id)
+      .single()
     if (!orgData) throw new Error('Organization not found')
 
     const { error } = await supabase
@@ -53,7 +63,11 @@ export const userService = {
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<void> {
     const { data: sessionData } = await supabase.auth.getSession()
-    const { data: orgData } = await supabase.from('profiles').select('organization_id').eq('id', sessionData.session?.user.id).single()
+    const { data: orgData } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', sessionData.session?.user.id)
+      .single()
     if (!orgData) throw new Error('Organization not found')
 
     const { error } = await supabase

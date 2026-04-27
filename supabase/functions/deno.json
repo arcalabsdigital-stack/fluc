@@ -2,6 +2,7 @@
   "_versions": {
     "chat-agent": 4,
     "welcome-email": 11,
-    "invite-user": 12
+    "invite-user": 13,
+    "asaas-webhook": 1
   }
 }

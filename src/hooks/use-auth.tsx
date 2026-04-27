@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 
@@ -61,7 +67,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null)
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(
+    null,
+  )
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -74,38 +82,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (profileData) {
       setProfile(profileData as Profile)
-      
+
       const { data: wsData } = await supabase
         .from('user_workspaces')
         .select('role, is_active, organization_id, organizations(id, name)')
         .eq('user_id', userId)
         .eq('is_active', true)
-        
+
       if (wsData && wsData.length > 0) {
         const mappedWorkspaces = wsData.map((ws: any) => ({
           id: ws.organization_id,
           name: ws.organizations?.name || 'Workspace',
           role: ws.role,
-          is_active: ws.is_active
+          is_active: ws.is_active,
         }))
         setWorkspaces(mappedWorkspaces)
-        
-        let activeWs = mappedWorkspaces.find(w => w.id === profileData.organization_id)
+
+        let activeWs = mappedWorkspaces.find(
+          (w) => w.id === profileData.organization_id,
+        )
         if (!activeWs) {
           activeWs = mappedWorkspaces[0]
-          await supabase.from('profiles').update({ organization_id: activeWs.id }).eq('id', userId)
+          await supabase
+            .from('profiles')
+            .update({ organization_id: activeWs.id })
+            .eq('id', userId)
           profileData.organization_id = activeWs.id
         }
-        
+
         setCurrentWorkspace(activeWs)
         setRole(activeWs.role)
-        
+
         const { data: subData } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('organization_id', activeWs.id)
           .single()
-          
+
         setSubscription(subData)
       }
     }
@@ -145,7 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const switchWorkspace = async (orgId: string) => {
     if (!user) return
     setLoading(true)
-    await supabase.from('profiles').update({ organization_id: orgId }).eq('id', user.id)
+    await supabase
+      .from('profiles')
+      .update({ organization_id: orgId })
+      .eq('id', user.id)
     await loadProfile(user.id)
     setLoading(false)
     window.location.href = '/'

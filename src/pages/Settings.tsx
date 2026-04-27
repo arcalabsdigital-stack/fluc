@@ -17,7 +17,7 @@ import {
   Mail,
   RepeatIcon,
   AlertTriangle,
-  CreditCard
+  CreditCard,
 } from 'lucide-react'
 import { RecurringTransactionsSettings } from '@/components/settings/RecurringTransactionsSettings'
 import { BillingSettings } from '@/components/settings/BillingSettings'
@@ -179,7 +179,10 @@ const Settings = () => {
         </p>
       </div>
 
-      <Tabs defaultValue={searchParams.get('tab') || 'profile'} className="w-full">
+      <Tabs
+        defaultValue={searchParams.get('tab') || 'profile'}
+        className="w-full"
+      >
         <TabsList className="mb-6 bg-white border border-gray-100 h-14 p-1 shadow-sm rounded-xl overflow-x-auto overflow-y-hidden flex-nowrap justify-start">
           <TabsTrigger
             value="profile"
