@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   Camera,
@@ -16,12 +17,15 @@ import {
   Mail,
   RepeatIcon,
   AlertTriangle,
+  CreditCard
 } from 'lucide-react'
 import { RecurringTransactionsSettings } from '@/components/settings/RecurringTransactionsSettings'
+import { BillingSettings } from '@/components/settings/BillingSettings'
 
 const Settings = () => {
   const { user, profile, updateProfileContext } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -175,22 +179,30 @@ const Settings = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="mb-6 bg-white border border-gray-100 h-14 p-1 shadow-sm rounded-xl">
+      <Tabs defaultValue={searchParams.get('tab') || 'profile'} className="w-full">
+        <TabsList className="mb-6 bg-white border border-gray-100 h-14 p-1 shadow-sm rounded-xl overflow-x-auto overflow-y-hidden flex-nowrap justify-start">
           <TabsTrigger
             value="profile"
-            className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50"
+            className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50 whitespace-nowrap"
           >
             <User className="w-4 h-4 mr-2" />
             Perfil
           </TabsTrigger>
           <TabsTrigger
             value="recurring"
-            className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50"
+            className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50 whitespace-nowrap"
             disabled={profile?.must_change_password}
           >
             <RepeatIcon className="w-4 h-4 mr-2" />
             Gastos Recorrentes
+          </TabsTrigger>
+          <TabsTrigger
+            value="billing"
+            className="h-full rounded-lg px-6 data-[state=active]:bg-gray-50 whitespace-nowrap"
+            disabled={profile?.must_change_password}
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            Assinatura
           </TabsTrigger>
         </TabsList>
 
@@ -374,6 +386,10 @@ const Settings = () => {
 
         <TabsContent value="recurring" className="animate-fade-in">
           <RecurringTransactionsSettings />
+        </TabsContent>
+
+        <TabsContent value="billing" className="animate-fade-in">
+          <BillingSettings />
         </TabsContent>
       </Tabs>
     </div>

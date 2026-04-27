@@ -21,5 +21,13 @@ export const ProtectedRoute = () => {
     return <Navigate to="/settings" replace />
   }
 
+  const { subscription } = useAuth()
+  if (subscription) {
+    const isExpired = subscription.status === 'canceled' || subscription.status === 'past_due' || (subscription.status === 'trial' && new Date(subscription.trial_end) < new Date());
+    if (isExpired && location.pathname !== '/settings') {
+      return <Navigate to="/settings?tab=billing" replace />
+    }
+  }
+
   return <Outlet />
 }

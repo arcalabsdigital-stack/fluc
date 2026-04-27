@@ -52,21 +52,21 @@ export default function Users() {
   const [users, setUsers] = useState<ExtendedUserProfile[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        if (role === 'admin') {
-          const data = await userService.getAllUsers()
-          setUsers(data)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-        toast.error('Erro ao carregar usuários')
-      } finally {
-        setLoading(false)
+  const fetchUsers = async () => {
+    try {
+      if (role === 'admin') {
+        const data = await userService.getAllUsers()
+        setUsers(data)
       }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      toast.error('Erro ao carregar usuários')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchUsers()
   }, [role])
 

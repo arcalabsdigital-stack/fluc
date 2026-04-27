@@ -1,8 +1,10 @@
-import { Search, Bell, UserIcon, LogOut, Menu } from 'lucide-react'
+import { Search, Bell, UserIcon, LogOut, Menu, ChevronsUpDown, Check, Building } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu'
+import { CreateWorkspaceDialog } from '@/components/CreateWorkspaceDialog'
 import {
   Popover,
   PopoverContent,
@@ -19,11 +21,12 @@ import { Sidebar } from './Sidebar'
 import { useState, useEffect } from 'react'
 
 export function Header() {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, workspaces, currentWorkspace, switchWorkspace, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false)
 
   useEffect(() => {
     setMobileMenuOpen(false)
@@ -48,12 +51,7 @@ export function Header() {
   const userInitials = getInitials(userName)
   const avatarUrl = profile?.avatar_url
 
-  const getOrgName = () => {
-    const org = profile?.organizations as any
-    if (!org) return 'Workspace'
-    return Array.isArray(org) ? org[0]?.name : org.name
-  }
-  const orgName = getOrgName()
+  const orgName = currentWorkspace?.name || 'Workspace'
 
   const handleSignOut = async () => {
     await signOut()
@@ -107,16 +105,48 @@ export function Header() {
         <div className="h-8 w-px bg-gray-200 mx-2 hidden sm:block"></div>
 
         <div className="flex items-center gap-3 pl-2">
-          <div className="text-right hidden sm:block">
-            <div className="text-sm font-bold text-gray-900">{userName}</div>
-            <div className="text-xs text-gray-500 capitalize flex items-center justify-end gap-1">
-              <span>{profile?.role || 'Membro'}</span>
-              <span>•</span>
-              <span className="truncate max-w-[120px] font-medium">
-                {orgName}
-              </span>
-            </div>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="hidden sm:flex items-center gap-2 px-3 h-10 border border-gray-100 bg-white hover:bg-gray-50 shadow-sm rounded-full">
+                <div className="flex flex-col items-end text-right">
+                  <span className="text-sm font-bold text-gray-900 leading-none truncate max-w-[150px]">{orgName}</span>
+                  <span className="text-[10px] text-gray-500 capitalize leading-none mt-1">{currentWorkspace?.role || 'Membro'}</span>
+                </div>
+                <ChevronsUpDown className="h-4 w-4 text-gray-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 rounded-xl p-2 shadow-lg">
+              <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 py-1">Seus Workspaces</DropdownMenuLabel>
+              <div className="max-h-60 overflow-y-auto mt-1 space-y-1">
+                {workspaces.map(ws => (
+                  <DropdownMenuItem 
+                    key={ws.id} 
+                    onClick={() => ws.id !== currentWorkspace?.id && switchWorkspace(ws.id)}
+                    className="flex items-center justify-between cursor-pointer py-2 px-2 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold flex-shrink-0">
+                        {ws.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="font-medium text-sm truncate max-w-[130px]">{ws.name}</span>
+                        <span className="text-[10px] text-gray-500 capitalize">{ws.role}</span>
+                      </div>
+                    </div>
+                    {ws.id === currentWorkspace?.id && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                  </DropdownMenuItem>
+                ))}
+              </div>
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem 
+                className="cursor-pointer py-2 px-2 rounded-lg text-primary focus:text-primary focus:bg-primary/5"
+                onClick={() => setIsCreateWorkspaceOpen(true)}
+              >
+                <Building className="mr-2 h-4 w-4" />
+                <span className="font-medium">Criar novo Workspace</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Popover>
             <PopoverTrigger asChild>
@@ -177,6 +207,11 @@ export function Header() {
           </Popover>
         </div>
       </div>
+
+      <CreateWorkspaceDialog 
+        open={isCreateWorkspaceOpen} 
+        onOpenChange={setIsCreateWorkspaceOpen} 
+      />
     </header>
   )
 }
