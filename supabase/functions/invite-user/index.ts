@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
 
     if (createError) throw createError
 
-    // Garante atomicidade: insere o profile e user_workspaces diretamente da edge function
+    // Garante atomicidade: insere o profile diretamente da edge function
     // Usa upsert para não conflitar caso o trigger "on_auth_user_created" dispare primeiro
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
@@ -137,22 +137,11 @@ Deno.serve(async (req) => {
       })
 
     if (profileError) {
+      // Rollback na criação de usuário caso a inserção do profile falhe (evita usuários órfãos)
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-      throw new Error(`Erro ao criar perfil do usuário: ${profileError.message}`)
-    }
-
-    const { error: wsError } = await supabaseAdmin
-      .from('user_workspaces')
-      .upsert({
-        user_id: newUser.user.id,
-        organization_id: profile.organization_id,
-        role: role,
-        is_active: true,
-      })
-
-    if (wsError) {
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-      throw new Error(`Erro ao vincular workspace: ${wsError.message}`)
+      throw new Error(
+        `Erro ao criar perfil do usuário: ${profileError.message}`,
+      )
     }
 
     // Dispara o email de boas vindas diretamente, isolando falhas
