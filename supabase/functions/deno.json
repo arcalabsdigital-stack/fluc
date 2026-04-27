@@ -3,6 +3,8 @@
     "chat-agent": 4,
     "welcome-email": 11,
     "invite-user": 13,
-    "asaas-webhook": 2
+    "asaas-webhook": 2,
+    "create-checkout": 1,
+    "check-subscriptions": 1
   }
 }
