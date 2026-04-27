@@ -53,10 +53,8 @@ Deno.serve(async (req) => {
     if (action === 'delete') {
       if (!userId) throw new Error('ID do usuário não fornecido')
 
-      const { error: deleteError } =
-        await supabaseAdmin.auth.admin.deleteUser(userId)
-      if (deleteError)
-        throw new Error(`Erro ao excluir usuário: ${deleteError.message}`)
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+      if (deleteError) throw new Error(`Erro ao excluir usuário: ${deleteError.message}`)
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
