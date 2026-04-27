@@ -28,25 +28,42 @@ Deno.serve(async (req) => {
     if (event === 'PAYMENT_RECEIVED' || event === 'PAYMENT_CONFIRMED') {
       await supabase
         .from('subscriptions')
-        .update({ 
+        .update({
           status: 'active',
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          current_period_end: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
         })
         .eq('id', sub.id)
 
-      await supabase
+      const { data: existingHist } = await supabase
         .from('billing_history')
-        .insert({
+        .select('id')
+        .eq('asaas_payment_id', payment.id)
+        .single()
+
+      if (existingHist) {
+        await supabase
+          .from('billing_history')
+          .update({
+            status: 'paid',
+            payment_date: new Date().toISOString(),
+            amount: payment.value,
+          })
+          .eq('id', existingHist.id)
+      } else {
+        await supabase.from('billing_history').insert({
           organization_id: sub.organization_id,
           subscription_id: sub.id,
           amount: payment.value,
           status: 'paid',
           payment_date: new Date().toISOString(),
           asaas_payment_id: payment.id,
-          invoice_url: payment.invoiceUrl || ''
+          invoice_url: payment.invoiceUrl || '',
         })
+      }
     } else if (event === 'PAYMENT_OVERDUE') {
-       await supabase
+      await supabase
         .from('subscriptions')
         .update({ status: 'past_due' })
         .eq('id', sub.id)

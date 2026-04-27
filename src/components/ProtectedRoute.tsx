@@ -1,9 +1,27 @@
 import { useAuth } from '@/hooks/use-auth'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 export const ProtectedRoute = () => {
   const { session, loading, profile, subscription } = useAuth()
   const location = useLocation()
+
+  useEffect(() => {
+    if (subscription) {
+      const isExpired =
+        subscription.status === 'canceled' ||
+        subscription.status === 'past_due' ||
+        (subscription.status === 'trial' &&
+          new Date(subscription.trial_end) < new Date())
+
+      if (isExpired && location.pathname !== '/settings') {
+        toast.error(
+          'Seu plano está inativo. Regularize sua situação para continuar.',
+        )
+      }
+    }
+  }, [subscription, location.pathname])
 
   if (loading) {
     return (

@@ -8,31 +8,62 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CreditCard, AlertTriangle } from 'lucide-react'
+import { CreditCard, AlertTriangle, ExternalLink, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase/client'
+import { useState, useEffect } from 'react'
 
 export function BillingSettings() {
-  const { currentWorkspace, subscription } = useAuth()
+  const { currentWorkspace, subscription, session } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [history, setHistory] = useState<any[]>([])
 
-  const handleSimulatePayment = async () => {
-    if (!subscription) return
+  useEffect(() => {
+    if (currentWorkspace?.id) {
+      loadHistory()
+    }
+  }, [currentWorkspace])
+
+  const loadHistory = async () => {
+    const { data } = await supabase
+      .from('billing_history')
+      .select('*')
+      .eq('organization_id', currentWorkspace!.id)
+      .order('created_at', { ascending: false })
+
+    if (data) setHistory(data)
+  }
+
+  const handleCheckout = async () => {
+    if (!subscription || !currentWorkspace || !session) return
+    setLoading(true)
     try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({
-          status: 'active',
-          current_period_end: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-        })
-        .eq('id', subscription.id)
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            plan: subscription.plan || 'Fluxo',
+            organization_id: currentWorkspace.id,
+          }),
+        },
+      )
 
-      if (error) throw error
-      toast.success('Pagamento processado com sucesso! Assinatura ativada.')
-      window.location.reload()
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erro ao gerar pagamento')
+
+      if (data.invoiceUrl) {
+        window.open(data.invoiceUrl, '_blank')
+        toast.success('Link de pagamento gerado com sucesso!')
+      }
     } catch (e: any) {
-      toast.error('Erro ao processar pagamento.')
+      toast.error(e.message || 'Erro ao processar pagamento.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -105,13 +136,15 @@ export function BillingSettings() {
 
             <div className="flex flex-col gap-2 min-w-[200px]">
               <Button
-                onClick={handleSimulatePayment}
+                onClick={handleCheckout}
+                disabled={loading}
                 className="w-full shadow-sm"
                 variant={isExpired ? 'default' : 'outline'}
               >
-                {isExpired
-                  ? 'Regularizar Pagamento'
-                  : 'Fazer Upgrade / Renovar'}
+                {loading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : null}
+                {isExpired ? 'Pagar Agora' : 'Fazer Upgrade / Renovar'}
               </Button>
             </div>
           </div>
@@ -125,8 +158,7 @@ export function BillingSettings() {
                 </h4>
                 <p className="text-sm mt-1 text-red-700">
                   O acesso às funcionalidades do sistema está restrito. Por
-                  favor, regularize sua situação via Asaas para continuar usando
-                  o Fluc.
+                  favor, regularize sua situação para continuar usando o Fluc.
                 </p>
               </div>
             </div>
@@ -136,11 +168,59 @@ export function BillingSettings() {
             <h3 className="font-semibold text-gray-900 mb-4">
               Histórico de Pagamentos
             </h3>
-            <div className="text-center p-10 border rounded-xl border-dashed border-gray-200 bg-gray-50/30">
-              <p className="text-gray-500 text-sm">
-                Nenhum pagamento registrado neste workspace ainda.
-              </p>
-            </div>
+            {history.length > 0 ? (
+              <div className="space-y-3">
+                {history.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(item.amount)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(item.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant={
+                          item.status === 'paid' ? 'default' : 'secondary'
+                        }
+                        className={
+                          item.status === 'paid'
+                            ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                            : ''
+                        }
+                      >
+                        {item.status === 'paid' ? 'Pago' : 'Pendente'}
+                      </Badge>
+                      {item.invoice_url && (
+                        <a
+                          href={item.invoice_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:text-primary/80"
+                          title="Ver Fatura"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-10 border rounded-xl border-dashed border-gray-200 bg-gray-50/30">
+                <p className="text-gray-500 text-sm">
+                  Nenhum pagamento registrado neste workspace ainda.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
