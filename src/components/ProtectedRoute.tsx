@@ -23,10 +23,13 @@ export const ProtectedRoute = () => {
     }
   }, [subscription, location.pathname])
 
-  if (loading) {
+  if (loading || (session && !profile)) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#F8F9FB]">
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#F8F9FB] space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-sm text-gray-500 font-medium">
+          Preparando seu ambiente...
+        </p>
       </div>
     )
   }

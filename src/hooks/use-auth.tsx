@@ -76,12 +76,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const loadProfile = async (userId: string) => {
-    const { data: profileData } = await supabase
+  const loadProfile = async (userId: string, retryCount = 0): Promise<void> => {
+    const { data: profileData, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
+
+    if (error || !profileData) {
+      if (retryCount < 10) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return loadProfile(userId, retryCount + 1)
+      }
+      return
+    }
 
     if (profileData) {
       setProfile(profileData as Profile)
@@ -92,7 +100,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           'role, is_active, organization_id, organizations(id, name, cnpj)',
         )
         .eq('user_id', userId)
-        .eq('is_active', true)
 
       if (wsData && wsData.length > 0) {
         const mappedWorkspaces = wsData.map((ws: any) => ({
