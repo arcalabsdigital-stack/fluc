@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -29,6 +29,7 @@ function isValidCPF(cpf: string) {
 }
 
 export default function Onboarding() {
+  const navigate = useNavigate()
   const { currentWorkspace, loading, user } = useAuth()
   const [document, setDocument] = useState('')
   const [name, setName] = useState('')
@@ -195,11 +196,11 @@ export default function Onboarding() {
         data: { phone: rawPhone },
       })
 
-      toast.success('Workspace criado! Você tem 7 dias de trial')
+      toast.success('Workspace criado com sucesso!')
 
       setTimeout(() => {
-        window.location.href = '/'
-      }, 1000)
+        navigate('/')
+      }, 500)
     } catch (error) {
       console.error(error)
       toast.error('Erro ao salvar os dados. Tente novamente.')
