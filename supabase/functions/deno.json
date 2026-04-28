@@ -5,6 +5,7 @@
     "invite-user": 14,
     "asaas-webhook": 3,
     "create-checkout": 2,
-    "check-subscriptions": 2
+    "check-subscriptions": 2,
+    "validar-cupom": 1
   }
 }
