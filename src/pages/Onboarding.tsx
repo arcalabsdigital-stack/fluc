@@ -9,58 +9,91 @@ import { toast } from 'sonner'
 import { CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+function isValidCPF(cpf: string) {
+  cpf = cpf.replace(/[^\d]+/g, '')
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false
+  let sum = 0,
+    rest
+  for (let i = 1; i <= 9; i++)
+    sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i)
+  rest = (sum * 10) % 11
+  if (rest === 10 || rest === 11) rest = 0
+  if (rest !== parseInt(cpf.substring(9, 10))) return false
+  sum = 0
+  for (let i = 1; i <= 10; i++)
+    sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i)
+  rest = (sum * 10) % 11
+  if (rest === 10 || rest === 11) rest = 0
+  if (rest !== parseInt(cpf.substring(10, 11))) return false
+  return true
+}
+
 export default function Onboarding() {
   const { currentWorkspace, loading, user } = useAuth()
   const [document, setDocument] = useState('')
-  const [companyName, setCompanyName] = useState('')
+  const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [docType, setDocType] = useState<'CPF' | 'CNPJ' | null>(null)
   const [apiStatus, setApiStatus] = useState<
-    'idle' | 'loading' | 'success' | 'error_404' | 'error_503' | 'error_400'
+    | 'idle'
+    | 'validating'
+    | 'success_cnpj'
+    | 'success_cpf'
+    | 'error_cnpj_404'
+    | 'error_cnpj_503'
+    | 'error_cnpj_400'
+    | 'error_cpf_invalid'
   >('idle')
   const [isManualEdit, setIsManualEdit] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const raw = document.replace(/\D/g, '')
-    if (raw.length === 11 || raw.length === 14) {
+    if (raw.length === 11) {
+      setDocType('CPF')
       const handler = setTimeout(() => {
-        fetchData(raw)
+        setApiStatus('validating')
+        if (isValidCPF(raw)) {
+          setApiStatus('success_cpf')
+          setIsManualEdit(true)
+        } else {
+          setApiStatus('error_cpf_invalid')
+        }
+      }, 300)
+      return () => clearTimeout(handler)
+    } else if (raw.length === 14) {
+      setDocType('CNPJ')
+      const handler = setTimeout(() => {
+        validateCNPJ(raw)
       }, 300)
       return () => clearTimeout(handler)
     } else {
+      setDocType(null)
       setApiStatus('idle')
     }
   }, [document])
 
-  const fetchData = async (raw: string) => {
-    setApiStatus('loading')
+  const validateCNPJ = async (raw: string) => {
+    setApiStatus('validating')
     try {
-      const isCnpj = raw.length === 14
-      const url = isCnpj
-        ? `https://brasilapi.com.br/api/cnpj/v1/${raw}`
-        : `https://brasilapi.com.br/api/cpf/v1/${raw}`
-
-      const res = await fetch(url)
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${raw}`)
       if (res.ok) {
         const data = await res.json()
-        setCompanyName(
-          isCnpj
-            ? data.razao_social || data.nome_fantasia || data.nome || ''
-            : data.nome || '',
-        )
-        setApiStatus('success')
+        setName(data.razao_social || data.nome_fantasia || data.nome || '')
+        setApiStatus('success_cnpj')
         setIsManualEdit(false)
       } else if (res.status === 404) {
-        setApiStatus('error_404')
+        setApiStatus('error_cnpj_404')
         setIsManualEdit(true)
       } else if (res.status === 400) {
-        setApiStatus('error_400')
+        setApiStatus('error_cnpj_400')
+        setIsManualEdit(true)
       } else {
-        setApiStatus('error_503')
+        setApiStatus('error_cnpj_503')
         setIsManualEdit(true)
       }
     } catch (err) {
-      setApiStatus('error_503')
+      setApiStatus('error_cnpj_503')
       setIsManualEdit(true)
     }
   }
@@ -104,12 +137,17 @@ export default function Onboarding() {
 
   const rawDoc = document.replace(/\D/g, '')
   const rawPhone = phone.replace(/\D/g, '')
+  const isValidDocStatus = [
+    'success_cnpj',
+    'success_cpf',
+    'error_cnpj_404',
+    'error_cnpj_503',
+  ].includes(apiStatus)
   const isValid =
     (rawDoc.length === 11 || rawDoc.length === 14) &&
-    companyName.trim().length >= 3 &&
-    rawPhone.length >= 10 &&
-    apiStatus !== 'error_400' &&
-    apiStatus !== 'loading'
+    isValidDocStatus &&
+    name.trim().length >= 3 &&
+    rawPhone.length >= 10
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,26 +155,30 @@ export default function Onboarding() {
     setIsSubmitting(true)
 
     try {
+      const tipoDoc = rawDoc.length === 14 ? 'CNPJ' : 'CPF'
+
       const { error: orgError } = await supabase
         .from('organizations')
         .update({
           cnpj: rawDoc,
-          corporate_name: companyName,
-          name: companyName,
+          corporate_name: name,
+          name: name,
         })
         .eq('id', currentWorkspace.id)
 
       if (orgError) throw orgError
 
-      await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           cnpj_ou_cpf: rawDoc,
-          tipo_documento: rawDoc.length === 14 ? 'CNPJ' : 'CPF',
-          razao_social_ou_nome: companyName,
+          tipo_documento: tipoDoc,
+          razao_social_ou_nome: name,
           telefone: rawPhone,
-        } as any)
+        })
         .eq('id', user.id)
+
+      if (profileError) throw profileError
 
       await supabase
         .from('subscriptions')
@@ -165,7 +207,35 @@ export default function Onboarding() {
     }
   }
 
-  if (loading) return null
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[400px] w-full bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="w-12 h-12 bg-slate-200 rounded-xl mb-4"></div>
+            <div className="h-6 bg-slate-200 rounded w-1/2 mb-2"></div>
+            <div className="h-4 bg-slate-200 rounded w-2/3 mb-8"></div>
+          </div>
+          <div className="space-y-5 animate-pulse">
+            <div>
+              <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
+              <div className="h-11 bg-slate-200 rounded w-full"></div>
+            </div>
+            <div>
+              <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
+              <div className="h-11 bg-slate-200 rounded w-full"></div>
+            </div>
+            <div>
+              <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
+              <div className="h-11 bg-slate-200 rounded w-full"></div>
+            </div>
+            <div className="h-11 bg-slate-200 rounded w-full mt-6"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (currentWorkspace?.cnpj) return <Navigate to="/" replace />
 
   return (
@@ -197,25 +267,37 @@ export default function Onboarding() {
                 className="min-h-[44px]"
                 disabled={isSubmitting}
               />
-              {apiStatus === 'loading' && (
+              {apiStatus === 'validating' && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
             </div>
-            {apiStatus === 'success' && (
+            {apiStatus === 'success_cnpj' && (
               <div className="flex items-center text-sm text-green-600 bg-green-50 p-2 rounded-md mt-2">
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 Dados encontrados
               </div>
             )}
-            {apiStatus === 'error_404' && (
-              <div className="flex items-center text-sm text-yellow-600 bg-yellow-50 p-2 rounded-md mt-2">
-                <AlertCircle className="w-4 h-4 mr-2" />
-                CNPJ/CPF não encontrado na Receita Federal
+            {apiStatus === 'success_cpf' && (
+              <div className="flex items-center text-sm text-green-600 bg-green-50 p-2 rounded-md mt-2">
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                CPF válido
               </div>
             )}
-            {apiStatus === 'error_503' && (
+            {apiStatus === 'error_cpf_invalid' && (
+              <div className="flex items-center text-sm text-red-600 bg-red-50 p-2 rounded-md mt-2">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                CPF inválido
+              </div>
+            )}
+            {apiStatus === 'error_cnpj_404' && (
+              <div className="flex items-center text-sm text-yellow-600 bg-yellow-50 p-2 rounded-md mt-2">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                CNPJ não encontrado na Receita Federal
+              </div>
+            )}
+            {apiStatus === 'error_cnpj_503' && (
               <div className="flex items-center justify-between text-sm text-red-600 bg-red-50 p-2 rounded-md mt-2">
                 <div className="flex items-center">
                   <AlertCircle className="w-4 h-4 mr-2" />
@@ -223,25 +305,27 @@ export default function Onboarding() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => fetchData(rawDoc)}
+                  onClick={() => validateCNPJ(rawDoc)}
                   className="text-red-700 hover:text-red-800"
                 >
                   <RefreshCw className="w-4 h-4" />
                 </button>
               </div>
             )}
-            {apiStatus === 'error_400' && (
+            {apiStatus === 'error_cnpj_400' && (
               <div className="flex items-center text-sm text-red-600 bg-red-50 p-2 rounded-md mt-2">
                 <AlertCircle className="w-4 h-4 mr-2" />
-                CNPJ ou CPF inválido
+                CNPJ inválido
               </div>
             )}
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-1">
-              <Label htmlFor="companyName">Razão Social</Label>
-              {apiStatus === 'success' && !isManualEdit && (
+              <Label htmlFor="name">
+                {docType === 'CPF' ? 'Nome' : 'Razão Social'}
+              </Label>
+              {apiStatus === 'success_cnpj' && !isManualEdit && (
                 <button
                   type="button"
                   onClick={() => setIsManualEdit(true)}
@@ -252,13 +336,17 @@ export default function Onboarding() {
               )}
             </div>
             <Input
-              id="companyName"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Será preenchido automaticamente"
-              readOnly={apiStatus === 'success' && !isManualEdit}
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={
+                docType === 'CPF'
+                  ? 'Digite seu nome completo'
+                  : 'Será preenchido automaticamente'
+              }
+              readOnly={apiStatus === 'success_cnpj' && !isManualEdit}
               className={cn(
-                apiStatus === 'success' && !isManualEdit
+                apiStatus === 'success_cnpj' && !isManualEdit
                   ? 'bg-slate-50 text-slate-600 focus-visible:ring-0 cursor-default'
                   : '',
                 'min-h-[44px]',
