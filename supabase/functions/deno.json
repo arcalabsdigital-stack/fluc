@@ -1,10 +1,10 @@
 {
   "_versions": {
-    "chat-agent": 4,
-    "welcome-email": 11,
-    "invite-user": 13,
-    "asaas-webhook": 2,
-    "create-checkout": 1,
-    "check-subscriptions": 1
+    "chat-agent": 5,
+    "welcome-email": 12,
+    "invite-user": 14,
+    "asaas-webhook": 3,
+    "create-checkout": 2,
+    "check-subscriptions": 2
   }
 }
