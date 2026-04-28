@@ -10,7 +10,7 @@ import { CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function Onboarding() {
-  const { currentWorkspace, loading } = useAuth()
+  const { currentWorkspace, loading, user } = useAuth()
   const [document, setDocument] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [phone, setPhone] = useState('')
@@ -113,7 +113,7 @@ export default function Onboarding() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isValid || isSubmitting || !currentWorkspace) return
+    if (!isValid || isSubmitting || !currentWorkspace || !user) return
     setIsSubmitting(true)
 
     try {
@@ -127,6 +127,16 @@ export default function Onboarding() {
         .eq('id', currentWorkspace.id)
 
       if (orgError) throw orgError
+
+      await supabase
+        .from('profiles')
+        .update({
+          cnpj_ou_cpf: rawDoc,
+          tipo_documento: rawDoc.length === 14 ? 'CNPJ' : 'CPF',
+          razao_social_ou_nome: companyName,
+          telefone: rawPhone,
+        } as any)
+        .eq('id', user.id)
 
       await supabase
         .from('subscriptions')
