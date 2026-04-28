@@ -15,8 +15,6 @@ import {
 export default function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [organizationName, setOrganizationName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const { signUp } = useAuth()
@@ -27,7 +25,7 @@ export default function SignUp() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!email || !password || !fullName || !organizationName) {
+    if (!email || !password) {
       toast.error('Por favor, preencha todos os campos.')
       return
     }
@@ -40,13 +38,7 @@ export default function SignUp() {
     setIsLoading(true)
 
     try {
-      const { error } = await signUp(
-        email,
-        password,
-        fullName,
-        organizationName,
-        plan,
-      )
+      const { error } = await signUp(email, password, '', '', plan)
 
       if (error) {
         throw error
@@ -89,47 +81,6 @@ export default function SignUp() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-xl shadow-gray-200/50 sm:rounded-2xl sm:px-10 border border-gray-100">
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Nome Completo
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <Input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-                  placeholder="Seu nome completo"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Nome da Empresa
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Building2 className="h-5 w-5 text-gray-400" />
-                </div>
-                <Input
-                  type="text"
-                  required
-                  value={organizationName}
-                  onChange={(e) => setOrganizationName(e.target.value)}
-                  className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-                  placeholder="Nome do seu negócio ou workspace"
-                />
-              </div>
-              <p className="mt-1.5 text-xs text-gray-500">
-                Este será o nome do seu workspace principal.
-              </p>
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Email

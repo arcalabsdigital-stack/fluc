@@ -32,7 +32,8 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const { currentWorkspace, loading, user } = useAuth()
   const [document, setDocument] = useState('')
-  const [name, setName] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [corporateName, setCorporateName] = useState('')
   const [phone, setPhone] = useState('')
   const [docType, setDocType] = useState<'CPF' | 'CNPJ' | null>(null)
   const [apiStatus, setApiStatus] = useState<
@@ -80,7 +81,9 @@ export default function Onboarding() {
       const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${raw}`)
       if (res.ok) {
         const data = await res.json()
-        setName(data.razao_social || data.nome_fantasia || data.nome || '')
+        setCorporateName(
+          data.razao_social || data.nome_fantasia || data.nome || '',
+        )
         setApiStatus('success_cnpj')
         setIsManualEdit(false)
       } else if (res.status === 404) {
@@ -144,11 +147,13 @@ export default function Onboarding() {
     'error_cnpj_404',
     'error_cnpj_503',
   ].includes(apiStatus)
+
   const isValid =
     (rawDoc.length === 11 || rawDoc.length === 14) &&
     isValidDocStatus &&
-    name.trim().length >= 3 &&
-    rawPhone.length >= 10
+    fullName.trim().length >= 3 &&
+    rawPhone.length >= 10 &&
+    (docType === 'CNPJ' ? corporateName.trim().length >= 3 : true)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -157,13 +162,14 @@ export default function Onboarding() {
 
     try {
       const tipoDoc = rawDoc.length === 14 ? 'CNPJ' : 'CPF'
+      const orgName = docType === 'CNPJ' ? corporateName : fullName
 
       const { error: orgError } = await supabase
         .from('organizations')
         .update({
           cnpj: rawDoc,
-          corporate_name: name,
-          name: name,
+          corporate_name: docType === 'CNPJ' ? corporateName : null,
+          name: orgName,
         })
         .eq('id', currentWorkspace.id)
 
@@ -172,9 +178,10 @@ export default function Onboarding() {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          full_name: fullName,
           cnpj_ou_cpf: rawDoc,
           tipo_documento: tipoDoc,
-          razao_social_ou_nome: name,
+          razao_social_ou_nome: orgName,
           telefone: rawPhone,
         })
         .eq('id', user.id)
@@ -322,39 +329,47 @@ export default function Onboarding() {
           </div>
 
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <Label htmlFor="name">
-                {docType === 'CPF' ? 'Nome' : 'Razão Social'}
-              </Label>
-              {apiStatus === 'success_cnpj' && !isManualEdit && (
-                <button
-                  type="button"
-                  onClick={() => setIsManualEdit(true)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Editar
-                </button>
-              )}
-            </div>
+            <Label htmlFor="fullName">Nome Completo</Label>
             <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={
-                docType === 'CPF'
-                  ? 'Digite seu nome completo'
-                  : 'Será preenchido automaticamente'
-              }
-              readOnly={apiStatus === 'success_cnpj' && !isManualEdit}
-              className={cn(
-                apiStatus === 'success_cnpj' && !isManualEdit
-                  ? 'bg-slate-50 text-slate-600 focus-visible:ring-0 cursor-default'
-                  : '',
-                'min-h-[44px]',
-              )}
+              id="fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Digite seu nome completo"
+              className="min-h-[44px] mt-1"
               disabled={isSubmitting}
             />
           </div>
+
+          {docType === 'CNPJ' && (
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <Label htmlFor="corporateName">Razão Social</Label>
+                {apiStatus === 'success_cnpj' && !isManualEdit && (
+                  <button
+                    type="button"
+                    onClick={() => setIsManualEdit(true)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Editar
+                  </button>
+                )}
+              </div>
+              <Input
+                id="corporateName"
+                value={corporateName}
+                onChange={(e) => setCorporateName(e.target.value)}
+                placeholder="Será preenchido automaticamente"
+                readOnly={apiStatus === 'success_cnpj' && !isManualEdit}
+                className={cn(
+                  apiStatus === 'success_cnpj' && !isManualEdit
+                    ? 'bg-slate-50 text-slate-600 focus-visible:ring-0 cursor-default'
+                    : '',
+                  'min-h-[44px]',
+                )}
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="phone">Telefone</Label>

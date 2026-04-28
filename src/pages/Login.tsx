@@ -87,6 +87,12 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Senha</Label>
+                <Link
+                  to="#"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Esqueceu a senha?
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
