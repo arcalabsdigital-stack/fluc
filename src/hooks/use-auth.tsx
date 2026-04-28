@@ -94,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return
       }
 
-      if (profileData) {
       setProfile(profileData as Profile)
 
       const { data: wsData } = await supabase
