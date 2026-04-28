@@ -77,21 +77,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   const loadProfile = async (userId: string, retryCount = 0): Promise<void> => {
-    const { data: profileData, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
 
-    if (error || !profileData) {
-      if (retryCount < 10) {
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        return loadProfile(userId, retryCount + 1)
+      if (error || !profileData) {
+        if (retryCount < 10) {
+          const delay = Math.min(1000 * Math.pow(1.5, retryCount), 5000)
+          await new Promise((resolve) => setTimeout(resolve, delay))
+          return loadProfile(userId, retryCount + 1)
+        }
+        console.error('Failed to load profile after retries:', error)
+        return
       }
-      return
-    }
 
-    if (profileData) {
+      if (profileData) {
       setProfile(profileData as Profile)
 
       const { data: wsData } = await supabase
@@ -133,6 +136,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .single()
 
         setSubscription(subData)
+      }
+    } catch (err) {
+      console.error('Exception in loadProfile:', err)
+      if (retryCount < 10) {
+        const delay = Math.min(1000 * Math.pow(1.5, retryCount), 5000)
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        return loadProfile(userId, retryCount + 1)
       }
     }
   }
@@ -187,17 +197,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     organizationName: string,
     plan?: string,
   ) => {
+    const data: any = {}
+    if (fullName) data.full_name = fullName
+    if (organizationName) {
+      data.organization_name = organizationName
+      data.company_name = organizationName
+    }
+    if (plan) data.plan = plan
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          full_name: fullName,
-          organization_name: organizationName,
-          company_name: organizationName,
-          ...(plan ? { plan } : {}),
-        },
+        data,
       },
     })
     return { error }
