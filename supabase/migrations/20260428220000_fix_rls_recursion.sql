@@ -16,7 +16,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
   SELECT organization_id FROM public.user_workspaces WHERE user_id = auth.uid();
-$;
+$$;
 
 -- Create a security definer function to get auth user admin workspaces safely, bypassing RLS
 CREATE OR REPLACE FUNCTION public.get_auth_admin_workspaces()
@@ -26,7 +26,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
   SELECT organization_id FROM public.user_workspaces WHERE user_id = auth.uid() AND role = 'admin';
-$;
+$$;
 
 -- Apply non-recursive policies
 CREATE POLICY "Users can view workspaces they belong to" ON public.user_workspaces
