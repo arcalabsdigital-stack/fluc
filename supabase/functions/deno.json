@@ -6,6 +6,7 @@
     "asaas-webhook": 3,
     "create-checkout": 2,
     "check-subscriptions": 2,
-    "validar-cupom": 1
+    "validar-cupom": 1,
+    "verificar-email": 1
   }
 }
