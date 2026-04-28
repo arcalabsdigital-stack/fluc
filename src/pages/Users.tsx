@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Mail, Trash2 } from 'lucide-react'
+import { Mail, Trash2, Loader2, CheckCircle2 } from 'lucide-react'
 import {
   Tooltip,
   TooltipTrigger,
@@ -52,6 +52,10 @@ export default function Users() {
   const [users, setUsers] = useState<ExtendedUserProfile[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [emailExists, setEmailExists] = useState<boolean | null>(null)
+  const [existingUserId, setExistingUserId] = useState<string | null>(null)
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+
   const fetchUsers = async () => {
     try {
       if (role === 'admin') {
@@ -69,6 +73,37 @@ export default function Users() {
   useEffect(() => {
     fetchUsers()
   }, [role])
+
+  useEffect(() => {
+    const checkEmail = async () => {
+      if (!inviteEmail || !inviteEmail.includes('@')) {
+        setEmailExists(null)
+        setExistingUserId(null)
+        return
+      }
+      setIsCheckingEmail(true)
+      try {
+        const res = await userService.checkEmail(inviteEmail)
+        setEmailExists(res.exists)
+        if (res.exists) {
+          setExistingUserId(res.user_id || null)
+          setInvitePassword('')
+        } else {
+          setExistingUserId(null)
+        }
+      } catch (error) {
+        console.error('Erro ao verificar email', error)
+      } finally {
+        setIsCheckingEmail(false)
+      }
+    }
+
+    const timeoutId = setTimeout(() => {
+      checkEmail()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [inviteEmail])
 
   const handleStatusChange = async (userId: string, isActive: boolean) => {
     try {
@@ -140,11 +175,15 @@ export default function Users() {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inviteEmail || !inviteName || !invitePassword) {
-      toast.error('Preencha todos os campos, incluindo a senha inicial')
+    if (!inviteEmail || !inviteName || !inviteRole) {
+      toast.error('Preencha os campos obrigatórios')
       return
     }
-    if (invitePassword.length < 6) {
+    if (!emailExists && !invitePassword) {
+      toast.error('A senha inicial é obrigatória para novos usuários')
+      return
+    }
+    if (!emailExists && invitePassword.length < 6) {
       toast.error('A senha deve ter pelo menos 6 caracteres')
       return
     }
@@ -154,14 +193,17 @@ export default function Users() {
         inviteEmail,
         inviteName,
         inviteRole,
-        invitePassword,
+        emailExists ? undefined : invitePassword,
+        existingUserId || undefined,
       )
-      toast.success('Convite enviado com sucesso!')
+      toast.success(`Convite enviado para ${inviteEmail}`)
       setShowInviteForm(false)
       setInviteEmail('')
       setInviteName('')
       setInvitePassword('')
       setInviteRole('colaborador')
+      setEmailExists(null)
+      setExistingUserId(null)
       const data = await userService.getAllUsers()
       setUsers(data)
     } catch (error: any) {
@@ -196,7 +238,7 @@ export default function Users() {
           <h2 className="text-lg font-semibold mb-4">Novo Convite</h2>
           <form
             onSubmit={handleInvite}
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start"
           >
             <div className="space-y-2">
               <Label htmlFor="inviteName">Nome Completo</Label>
@@ -209,27 +251,47 @@ export default function Users() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="inviteEmail">E-mail</Label>
-              <Input
-                id="inviteEmail"
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="inviteEmail"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  required
+                  className="pr-10"
+                />
+                {isCheckingEmail && (
+                  <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-gray-400" />
+                )}
+                {!isCheckingEmail &&
+                  emailExists !== null &&
+                  inviteEmail.includes('@') && (
+                    <CheckCircle2
+                      className={`absolute right-3 top-2.5 h-4 w-4 ${emailExists ? 'text-blue-500' : 'text-green-500'}`}
+                    />
+                  )}
+              </div>
+              {emailExists && (
+                <p className="text-xs text-blue-600 font-medium">
+                  Usuário já existe e será vinculado.
+                </p>
+              )}
             </div>
+            {!emailExists && (
+              <div className="space-y-2">
+                <Label htmlFor="invitePassword">Senha Inicial</Label>
+                <Input
+                  id="invitePassword"
+                  type="text"
+                  value={invitePassword}
+                  onChange={(e) => setInvitePassword(e.target.value)}
+                  placeholder="Ex: Senha@123"
+                  required={!emailExists}
+                />
+              </div>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="invitePassword">Senha Inicial</Label>
-              <Input
-                id="invitePassword"
-                type="text"
-                value={invitePassword}
-                onChange={(e) => setInvitePassword(e.target.value)}
-                placeholder="Ex: Senha@123"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="inviteRole">Função</Label>{' '}
+              <Label htmlFor="inviteRole">Função</Label>
               <Select
                 value={inviteRole}
                 onValueChange={(val) => setInviteRole(val as Role)}
@@ -247,13 +309,13 @@ export default function Users() {
             <div className="md:col-span-4 flex justify-end mt-2">
               <Button
                 type="submit"
-                disabled={isInviting}
+                disabled={isInviting || isCheckingEmail}
                 className="w-full md:w-auto"
               >
-                {isInviting ? 'Enviando...' : 'Enviar Convite e Criar Acesso'}
+                {isInviting ? 'Enviando...' : 'Enviar Convite'}
               </Button>
             </div>
-          </form>{' '}
+          </form>
         </div>
       )}
 
@@ -309,10 +371,10 @@ export default function Users() {
                       className={
                         user.is_active !== false
                           ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-red-50 text-red-700 border-red-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
                       }
                     >
-                      {user.is_active !== false ? 'Ativo' : 'Inativo'}
+                      {user.is_active !== false ? 'Ativo' : 'Convite Enviado'}
                     </Badge>
                   </TableCell>
                   <TableCell>

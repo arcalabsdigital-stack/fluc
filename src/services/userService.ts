@@ -79,11 +79,29 @@ export const userService = {
     if (error) throw error
   },
 
+  async checkEmail(
+    email: string,
+  ): Promise<{ exists: boolean; user_id?: string }> {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/verificar-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
+      },
+      body: JSON.stringify({ email }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'Erro ao verificar email')
+    return data
+  },
+
   async inviteUser(
     email: string,
     fullName: string,
     role: Role,
     password?: string,
+    userId?: string,
   ): Promise<void> {
     const { data: sessionData } = await supabase.auth.getSession()
     const res = await fetch(`${SUPABASE_URL}/functions/v1/invite-user`, {
@@ -98,6 +116,7 @@ export const userService = {
         fullName,
         role,
         password,
+        userId,
       }),
     })
 
