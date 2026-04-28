@@ -13,6 +13,7 @@ export interface Workspace {
   name: string
   role: string
   is_active: boolean
+  cnpj?: string | null
 }
 
 export interface Subscription {
@@ -85,7 +86,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const { data: wsData } = await supabase
         .from('user_workspaces')
-        .select('role, is_active, organization_id, organizations(id, name)')
+        .select(
+          'role, is_active, organization_id, organizations(id, name, cnpj)',
+        )
         .eq('user_id', userId)
         .eq('is_active', true)
 
@@ -93,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const mappedWorkspaces = wsData.map((ws: any) => ({
           id: ws.organization_id,
           name: ws.organizations?.name || 'Workspace',
+          cnpj: ws.organizations?.cnpj,
           role: ws.role,
           is_active: ws.is_active,
         }))

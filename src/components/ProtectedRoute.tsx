@@ -4,7 +4,8 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 
 export const ProtectedRoute = () => {
-  const { session, loading, profile, subscription } = useAuth()
+  const { session, loading, profile, subscription, currentWorkspace } =
+    useAuth()
   const location = useLocation()
 
   useEffect(() => {
@@ -35,7 +36,21 @@ export const ProtectedRoute = () => {
     return <Navigate to="/login" replace />
   }
 
-  if (profile?.must_change_password && location.pathname !== '/settings') {
+  const needsOnboarding = currentWorkspace && !currentWorkspace.cnpj
+
+  if (needsOnboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  if (!needsOnboarding && location.pathname === '/onboarding') {
+    return <Navigate to="/" replace />
+  }
+
+  if (
+    profile?.must_change_password &&
+    location.pathname !== '/settings' &&
+    location.pathname !== '/onboarding'
+  ) {
     return <Navigate to="/settings" replace />
   }
 

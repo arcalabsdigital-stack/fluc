@@ -53,7 +53,8 @@ Deno.serve(async (req) => {
     if (action === 'delete') {
       if (!userId) throw new Error('ID do usuário não fornecido')
 
-      if (!profile.organization_id) throw new Error('Organização não encontrada')
+      if (!profile.organization_id)
+        throw new Error('Organização não encontrada')
 
       const { error: deleteError } = await supabaseAdmin
         .from('user_workspaces')
@@ -61,7 +62,10 @@ Deno.serve(async (req) => {
         .eq('user_id', userId)
         .eq('organization_id', profile.organization_id)
 
-      if (deleteError) throw new Error(`Erro ao excluir usuário do workspace: ${deleteError.message}`)
+      if (deleteError)
+        throw new Error(
+          `Erro ao excluir usuário do workspace: ${deleteError.message}`,
+        )
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

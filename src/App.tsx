@@ -10,6 +10,7 @@ import Help from './pages/Help'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
+import Onboarding from './pages/Onboarding'
 import Users from './pages/Users'
 import History from './pages/History'
 import Search from './pages/Search'
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/history" element={<History />} />
                 <Route path="/search" element={<Search />} />
               </Route>
+              <Route path="/onboarding" element={<Onboarding />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
