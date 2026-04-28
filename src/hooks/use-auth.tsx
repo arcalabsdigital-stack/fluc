@@ -30,6 +30,7 @@ export interface Profile {
   avatar_url: string | null
   organization_id: string
   must_change_password?: boolean
+  cnpj_ou_cpf?: string | null
 }
 
 interface AuthContextType {
@@ -52,6 +53,7 @@ interface AuthContextType {
   subscription: Subscription | null
   switchWorkspace: (orgId: string) => Promise<void>
   updateProfileContext: (updates: Partial<Profile>) => void
+  reloadProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -207,6 +209,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
+  const reloadProfile = async () => {
+    if (user) {
+      await loadProfile(user.id)
+    }
+  }
+
   const updateProfileContext = (updates: Partial<Profile>) => {
     setProfile((prev) => (prev ? { ...prev, ...updates } : null))
   }
@@ -227,6 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signOut,
         loading,
         updateProfileContext,
+        reloadProfile,
       }}
     >
       {children}

@@ -30,7 +30,7 @@ function isValidCPF(cpf: string) {
 
 export default function Onboarding() {
   const navigate = useNavigate()
-  const { currentWorkspace, loading, user } = useAuth()
+  const { currentWorkspace, loading, user, profile, reloadProfile } = useAuth()
   const [document, setDocument] = useState('')
   const [fullName, setFullName] = useState('')
   const [corporateName, setCorporateName] = useState('')
@@ -205,8 +205,13 @@ export default function Onboarding() {
 
       toast.success('Workspace criado com sucesso!')
 
-      setTimeout(() => {
-        navigate('/')
+      setTimeout(async () => {
+        if (reloadProfile) {
+          await reloadProfile()
+        }
+        setTimeout(() => {
+          navigate('/')
+        }, 300)
       }, 500)
     } catch (error) {
       console.error(error)
@@ -244,7 +249,7 @@ export default function Onboarding() {
     )
   }
 
-  if (currentWorkspace?.cnpj) return <Navigate to="/" replace />
+  if (profile?.cnpj_ou_cpf) return <Navigate to="/" replace />
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] py-12 px-4 sm:px-6 lg:px-8">
