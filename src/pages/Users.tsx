@@ -45,26 +45,36 @@ export default function Users() {
   const [resendingId, setResendingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteName, setInviteName] = useState('')
   const [invitePassword, setInvitePassword] = useState('')
   const [inviteRole, setInviteRole] = useState<Role>('colaborador')
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [users, setUsers] = useState<ExtendedUserProfile[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const [emailExists, setEmailExists] = useState<boolean | null>(null)
   const [existingUserId, setExistingUserId] = useState<string | null>(null)
   const [isCheckingEmail, setIsCheckingEmail] = useState(false)
 
   const fetchUsers = async () => {
+    setLoading(true)
+    setError(null)
     try {
       if (role === 'admin') {
         const data = await userService.getAllUsers()
         setUsers(data)
+      } else {
+        setError('Você não tem permissão')
       }
-    } catch (error) {
-      console.error('Error fetching users:', error)
-      toast.error('Erro ao carregar usuários')
+    } catch (err: any) {
+      console.error('Error fetching users:', err)
+      if (err?.status === 401) {
+        window.location.href = '/login'
+      } else if (err?.status === 403 || err?.code === '42501') {
+        setError('Você não tem permissão para visualizar os usuários.')
+      } else {
+        setError('Erro ao carregar usuarios. Tente novamente.')
+      }
     } finally {
       setLoading(false)
     }
@@ -175,7 +185,7 @@ export default function Users() {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inviteEmail || !inviteName || !inviteRole) {
+    if (!inviteEmail || !inviteRole) {
       toast.error('Preencha os campos obrigatórios')
       return
     }
@@ -189,9 +199,10 @@ export default function Users() {
     }
     setIsInviting(true)
     try {
+      const defaultName = inviteEmail.split('@')[0]
       await userService.inviteUser(
         inviteEmail,
-        inviteName,
+        defaultName,
         inviteRole,
         emailExists ? undefined : invitePassword,
         existingUserId || undefined,
@@ -199,7 +210,6 @@ export default function Users() {
       toast.success(`Convite enviado para ${inviteEmail}`)
       setShowInviteForm(false)
       setInviteEmail('')
-      setInviteName('')
       setInvitePassword('')
       setInviteRole('colaborador')
       setEmailExists(null)
@@ -238,17 +248,8 @@ export default function Users() {
           <h2 className="text-lg font-semibold mb-4">Novo Convite</h2>
           <form
             onSubmit={handleInvite}
-            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start"
           >
-            <div className="space-y-2">
-              <Label htmlFor="inviteName">Nome Completo</Label>
-              <Input
-                id="inviteName"
-                value={inviteName}
-                onChange={(e) => setInviteName(e.target.value)}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="inviteEmail">E-mail</Label>
               <div className="relative">
@@ -306,7 +307,7 @@ export default function Users() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="md:col-span-4 flex justify-end mt-2">
+            <div className="md:col-span-3 flex justify-end mt-2">
               <Button
                 type="submit"
                 disabled={isInviting || isCheckingEmail}
@@ -325,6 +326,13 @@ export default function Users() {
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-12 w-full" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="p-6 space-y-4 flex flex-col items-center justify-center py-12">
+            <p className="text-red-500 font-medium">{error}</p>
+            <Button variant="outline" onClick={fetchUsers} className="mt-2">
+              Tentar Novamente
+            </Button>
           </div>
         ) : (
           <Table>

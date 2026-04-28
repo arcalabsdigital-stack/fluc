@@ -5,42 +5,61 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
 
 export const userService = {
   async getAllUsers(): Promise<UserProfile[]> {
-    const { data: sessionData } = await supabase.auth.getSession()
-    const { data: orgData } = await supabase
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession()
+    if (sessionError || !sessionData.session) {
+      throw { status: 401, message: 'Não autenticado' }
+    }
+
+    const { data: orgData, error: orgError } = await supabase
       .from('profiles')
       .select('organization_id')
-      .eq('id', sessionData.session?.user.id)
+      .eq('id', sessionData.session.user.id)
       .single()
 
-    if (!orgData?.organization_id) return []
+    if (orgError || !orgData?.organization_id) {
+      throw {
+        status: 403,
+        message: 'Organização não encontrada ou sem permissão',
+      }
+    }
 
-    const { data, error } = await supabase
+    const { data: workspaces, error: wsError } = await supabase
       .from('user_workspaces')
-      .select(
-        `
-        user_id,
-        role,
-        is_active,
-        profiles!inner (
-          id,
-          full_name,
-          avatar_url,
-          must_change_password
-        )
-      `,
-      )
+      .select('*')
       .eq('organization_id', orgData.organization_id)
 
-    if (error) throw error
+    if (wsError) {
+      throw { status: parseInt(wsError.code) || 500, message: wsError.message }
+    }
 
-    return data.map((item: any) => ({
-      id: item.user_id,
-      full_name: item.profiles.full_name,
-      avatar_url: item.profiles.avatar_url,
-      role: item.role,
-      is_active: item.is_active,
-      must_change_password: item.profiles.must_change_password,
-    })) as UserProfile[]
+    if (!workspaces || workspaces.length === 0) return []
+
+    const userIds = workspaces.map((ws) => ws.user_id)
+
+    const { data: profiles, error: profError } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, must_change_password')
+      .in('id', userIds)
+
+    if (profError) {
+      throw {
+        status: parseInt(profError.code) || 500,
+        message: profError.message,
+      }
+    }
+
+    return workspaces.map((ws) => {
+      const profile = profiles.find((p) => p.id === ws.user_id)
+      return {
+        id: ws.user_id,
+        full_name: profile?.full_name || 'Usuário',
+        avatar_url: profile?.avatar_url,
+        role: ws.role,
+        is_active: ws.is_active,
+        must_change_password: profile?.must_change_password,
+      }
+    }) as UserProfile[]
   },
 
   async updateUserRole(userId: string, newRole: Role): Promise<void> {

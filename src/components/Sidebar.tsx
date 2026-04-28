@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -65,15 +66,43 @@ export function Sidebar({
 }) {
   const location = useLocation()
   const pathname = location.pathname
-  const { signOut, role, profile } = useAuth()
+  const {
+    signOut,
+    role,
+    currentWorkspace,
+    loading: authLoading,
+    reloadProfile,
+  } = useAuth()
   const navigate = useNavigate()
 
-  const getOrgName = () => {
-    const org = profile?.organizations as any
-    if (!org) return 'Carregando...'
-    return Array.isArray(org) ? org[0]?.name : org.name
+  const [workspaceName, setWorkspaceName] = useState('Carregando...')
+  const [isTimeout, setIsTimeout] = useState(false)
+
+  useEffect(() => {
+    if (currentWorkspace?.name) {
+      setWorkspaceName(currentWorkspace.name)
+      setIsTimeout(false)
+    } else if (!authLoading) {
+      setWorkspaceName('Meu Workspace')
+    }
+  }, [currentWorkspace, authLoading])
+
+  useEffect(() => {
+    let timeoutId: any
+    if (!currentWorkspace?.name && authLoading) {
+      timeoutId = setTimeout(() => {
+        setIsTimeout(true)
+        setWorkspaceName('Workspace não encontrado')
+      }, 5000)
+    }
+    return () => clearTimeout(timeoutId)
+  }, [currentWorkspace, authLoading])
+
+  const handleRetryWorkspace = () => {
+    setIsTimeout(false)
+    setWorkspaceName('Carregando...')
+    reloadProfile()
   }
-  const orgName = getOrgName()
 
   const handleLogout = async () => {
     try {
@@ -115,13 +144,25 @@ export function Sidebar({
             Fluc
           </span>
         </div>
-        {profile && (
+        {isTimeout ? (
+          <div className="px-2 mt-2 bg-white/50 rounded-lg py-3 border border-red-100 flex flex-col gap-2">
+            <span className="text-xs font-semibold text-red-500 text-center">
+              {workspaceName}
+            </span>
+            <button
+              onClick={handleRetryWorkspace}
+              className="text-xs bg-red-50 text-red-600 hover:bg-red-100 py-1.5 px-2 rounded-md font-medium transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        ) : (
           <div className="px-1 mt-2 bg-white/50 rounded-lg py-2 border border-gray-100">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">
               Workspace
             </span>
             <span className="text-sm font-semibold text-gray-800 truncate block">
-              {orgName}
+              {workspaceName}
             </span>
           </div>
         )}
