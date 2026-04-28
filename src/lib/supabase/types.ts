@@ -11,7 +11,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -48,18 +48,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'audit_logs_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'audit_logs_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -102,18 +102,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'billing_history_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "billing_history_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'billing_history_subscription_id_fkey'
-            columns: ['subscription_id']
+            foreignKeyName: "billing_history_subscription_id_fkey"
+            columns: ["subscription_id"]
             isOneToOne: false
-            referencedRelation: 'subscriptions'
-            referencedColumns: ['id']
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -147,11 +147,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'budgets_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "budgets_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -212,11 +212,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'notifications_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -307,20 +307,47 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'compras_parceladas_categoria_id_fkey'
-            columns: ['category_id']
+            foreignKeyName: "compras_parceladas_categoria_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'compras_parceladas_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "compras_parceladas_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
+      }
+      plans: {
+        Row: {
+          asaas_plan_id: string | null
+          created_at: string
+          features: Json | null
+          id: string
+          name: string
+          price: number
+        }
+        Insert: {
+          asaas_plan_id?: string | null
+          created_at?: string
+          features?: Json | null
+          id?: string
+          name: string
+          price: number
+        }
+        Update: {
+          asaas_plan_id?: string | null
+          created_at?: string
+          features?: Json | null
+          id?: string
+          name?: string
+          price?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -361,11 +388,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profiles_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -420,11 +447,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'recurring_transactions_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "recurring_transactions_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -470,11 +497,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'subscriptions_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: true
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -535,25 +562,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'transactions_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "transactions_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'transactions_parcelated_transaction_id_fkey'
-            columns: ['parcelated_transaction_id']
+            foreignKeyName: "transactions_parcelated_transaction_id_fkey"
+            columns: ["parcelated_transaction_id"]
             isOneToOne: false
-            referencedRelation: 'parcelated_transactions'
-            referencedColumns: ['id']
+            referencedRelation: "parcelated_transactions"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'transactions_recurring_transaction_id_fkey'
-            columns: ['recurring_transaction_id']
+            foreignKeyName: "transactions_recurring_transaction_id_fkey"
+            columns: ["recurring_transaction_id"]
             isOneToOne: false
-            referencedRelation: 'recurring_transactions'
-            referencedColumns: ['id']
+            referencedRelation: "recurring_transactions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -584,11 +611,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'user_workspaces_organization_id_fkey'
-            columns: ['organization_id']
+            foreignKeyName: "user_workspaces_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: 'organizations'
-            referencedColumns: ['id']
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -617,33 +644,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -652,23 +679,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -677,23 +704,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -702,36 +729,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -739,6 +766,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -818,6 +846,13 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
 //   user_id: uuid (not null)
+// Table: plans
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   price: numeric (not null)
+//   asaas_plan_id: text (nullable)
+//   features: jsonb (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: profiles
 //   id: uuid (not null)
 //   full_name: text (nullable)
@@ -908,6 +943,9 @@ export const Constants = {
 //   FOREIGN KEY compras_parceladas_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 //   PRIMARY KEY compras_parceladas_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY compras_parceladas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+// Table: plans
+//   UNIQUE plans_name_key: UNIQUE (name)
+//   PRIMARY KEY plans_pkey: PRIMARY KEY (id)
 // Table: profiles
 //   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   FOREIGN KEY profiles_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
@@ -977,6 +1015,9 @@ export const Constants = {
 //     USING: (organization_id = get_current_user_org_id())
 //   Policy "Users can view their parcelated transactions" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (organization_id = get_current_user_org_id())
+// Table: plans
+//   Policy "authenticated_select_plans" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: profiles
 //   Policy "Admins can update profiles in their organization" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (is_admin() AND (organization_id = get_current_user_org_id()))
@@ -1029,26 +1070,26 @@ export const Constants = {
 //   BEGIN
 //       IF NEW.type = 'Despesa' THEN
 //           v_month := to_char(NEW.date, 'YYYY-MM');
-//
-//           SELECT * INTO v_budget FROM public.budgets
-//           WHERE category = NEW.category
-//           AND month = v_month
+//           
+//           SELECT * INTO v_budget FROM public.budgets 
+//           WHERE category = NEW.category 
+//           AND month = v_month 
 //           AND organization_id = NEW.organization_id;
-//
+//           
 //           IF FOUND THEN
 //               SELECT COALESCE(SUM(amount), 0) + NEW.amount INTO v_spent
 //               FROM public.transactions
-//               WHERE category = NEW.category
+//               WHERE category = NEW.category 
 //               AND type = 'Despesa'
 //               AND to_char(date, 'YYYY-MM') = v_month
 //               AND organization_id = NEW.organization_id
 //               AND id != NEW.id;
-//
+//               
 //               IF v_spent >= v_budget.amount AND (v_spent - NEW.amount) < v_budget.amount THEN
 //                   INSERT INTO public.notifications (organization_id, user_id, title, message)
 //                   VALUES (
-//                       NEW.organization_id, NEW.user_id,
-//                       'Alerta de Orçamento',
+//                       NEW.organization_id, NEW.user_id, 
+//                       'Alerta de Orçamento', 
 //                       'Atenção! Você atingiu ou ultrapassou o limite definido para esta categoria.'
 //                   );
 //               END IF;
@@ -1057,7 +1098,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION create_new_workspace(text, text, text)
 //   CREATE OR REPLACE FUNCTION public.create_new_workspace(p_name text, p_cnpj text, p_corporate_name text)
 //    RETURNS uuid
@@ -1066,29 +1107,33 @@ export const Constants = {
 //   AS $function$
 //   DECLARE
 //     v_org_id UUID;
+//     v_slug TEXT;
 //   BEGIN
 //     IF auth.uid() IS NULL THEN
 //       RAISE EXCEPTION 'Not authenticated';
 //     END IF;
-//
-//     INSERT INTO public.organizations (name, cnpj, corporate_name)
-//     VALUES (p_name, p_cnpj, p_corporate_name)
+//   
+//     -- Generate a basic slug
+//     v_slug := lower(regexp_replace(p_name, '[^a-zA-Z0-9]+', '-', 'g'));
+//   
+//     INSERT INTO public.organizations (name, cnpj, corporate_name, slug)
+//     VALUES (p_name, p_cnpj, p_corporate_name, v_slug)
 //     RETURNING id INTO v_org_id;
-//
+//   
 //     INSERT INTO public.user_workspaces (user_id, organization_id, role, is_active)
 //     VALUES (auth.uid(), v_org_id, 'admin', true);
-//
+//   
 //     INSERT INTO public.subscriptions (organization_id, plan, status, trial_start, trial_end)
 //     VALUES (v_org_id, 'Fluxo', 'trial', now(), now() + interval '7 days');
-//
+//   
 //     UPDATE public.profiles
 //     SET organization_id = v_org_id
 //     WHERE id = auth.uid();
-//
+//   
 //     RETURN v_org_id;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_current_user_org_id()
 //   CREATE OR REPLACE FUNCTION public.get_current_user_org_id()
 //    RETURNS uuid
@@ -1097,7 +1142,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT organization_id FROM public.profiles WHERE id = auth.uid() AND is_active = true;
 //   $function$
-//
+//   
 // FUNCTION get_dashboard_kpi(date)
 //   CREATE OR REPLACE FUNCTION public.get_dashboard_kpi(p_date_now date)
 //    RETURNS json
@@ -1118,37 +1163,37 @@ export const Constants = {
 //     v_end_month := (date_trunc('month', p_date_now) + interval '1 month' - interval '1 day')::date;
 //     v_start_last_month := date_trunc('month', p_date_now - interval '1 month');
 //     v_end_last_month := (date_trunc('month', p_date_now) - interval '1 day')::date;
-//
+//   
 //     -- Calculate Total Balance (All time based on visibility, up to today so future manual entries do not alter today's balance)
 //     SELECT COALESCE(SUM(CASE WHEN type = 'Receita' THEN amount ELSE -amount END), 0)
 //     INTO v_total_balance
 //     FROM public.transactions
 //     WHERE date <= p_date_now;
-//
+//   
 //     -- Calculate Month Income
 //     SELECT COALESCE(SUM(amount), 0)
 //     INTO v_month_income
 //     FROM public.transactions
 //     WHERE type = 'Receita' AND date >= v_start_month AND date <= v_end_month;
-//
+//   
 //     -- Calculate Month Expense
 //     SELECT COALESCE(SUM(amount), 0)
 //     INTO v_month_expense
 //     FROM public.transactions
 //     WHERE type = 'Despesa' AND date >= v_start_month AND date <= v_end_month;
-//
+//   
 //     -- Calculate Last Month Income
 //     SELECT COALESCE(SUM(amount), 0)
 //     INTO v_last_month_income
 //     FROM public.transactions
 //     WHERE type = 'Receita' AND date >= v_start_last_month AND date <= v_end_last_month;
-//
+//   
 //     -- Calculate Last Month Expense
 //     SELECT COALESCE(SUM(amount), 0)
 //     INTO v_last_month_expense
 //     FROM public.transactions
 //     WHERE type = 'Despesa' AND date >= v_start_last_month AND date <= v_end_last_month;
-//
+//   
 //     RETURN json_build_object(
 //       'totalBalance', v_total_balance,
 //       'monthIncome', v_month_income,
@@ -1158,7 +1203,7 @@ export const Constants = {
 //     );
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_latest_transaction_id()
 //   CREATE OR REPLACE FUNCTION public.get_latest_transaction_id()
 //    RETURNS uuid
@@ -1171,7 +1216,7 @@ export const Constants = {
 //     RETURN (SELECT id FROM public.transactions ORDER BY created_at DESC, id DESC LIMIT 1);
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_user_role()
 //   CREATE OR REPLACE FUNCTION public.get_user_role()
 //    RETURNS text
@@ -1181,14 +1226,14 @@ export const Constants = {
 //   AS $function$
 //   BEGIN
 //     RETURN COALESCE((
-//       SELECT role FROM public.user_workspaces
-//       WHERE user_id = auth.uid()
+//       SELECT role FROM public.user_workspaces 
+//       WHERE user_id = auth.uid() 
 //         AND organization_id = public.get_current_user_org_id()
 //         AND is_active = true
 //     ), 'visitante');
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -1203,32 +1248,32 @@ export const Constants = {
 //     v_plan TEXT;
 //   BEGIN
 //     v_must_change_password := COALESCE((NEW.raw_user_meta_data->>'must_change_password')::boolean, false);
-//
+//     
 //     BEGIN
 //       org_id := (NEW.raw_user_meta_data->>'organization_id')::UUID;
 //     EXCEPTION WHEN OTHERS THEN
 //       org_id := NULL;
 //     END;
-//
+//     
 //     new_role := COALESCE(NEW.raw_user_meta_data->>'role', 'admin');
 //     v_plan := NEW.raw_user_meta_data->>'plan';
-//
+//   
 //     IF org_id IS NULL THEN
 //        v_org_name := COALESCE(NEW.raw_user_meta_data->>'organization_name', NEW.raw_user_meta_data->>'full_name' || ' - Organização', 'Minha Organização');
 //        INSERT INTO public.organizations (name) VALUES (v_org_name) RETURNING id INTO org_id;
 //        new_role := 'admin';
-//
+//        
 //        INSERT INTO public.subscriptions (organization_id, plan, status, trial_start, trial_end)
 //        VALUES (org_id, COALESCE(v_plan, 'Fluxo'), 'trial', now(), now() + interval '7 days')
 //        ON CONFLICT (organization_id) DO NOTHING;
 //     END IF;
-//
+//   
 //     BEGIN
 //       IF org_id IS NOT NULL THEN
 //         INSERT INTO public.profiles (id, full_name, role, organization_id, is_active, must_change_password, plan)
 //         VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name', new_role, org_id, true, v_must_change_password, v_plan)
 //         ON CONFLICT (id) DO UPDATE SET plan = EXCLUDED.plan WHERE profiles.plan IS NULL;
-//
+//         
 //         INSERT INTO public.user_workspaces (user_id, organization_id, role, is_active)
 //         VALUES (NEW.id, org_id, new_role, true)
 //         ON CONFLICT (user_id, organization_id) DO NOTHING;
@@ -1236,11 +1281,11 @@ export const Constants = {
 //     EXCEPTION WHEN OTHERS THEN
 //       RAISE WARNING 'handle_new_user profile insert failed: %', SQLERRM;
 //     END;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION is_admin()
 //   CREATE OR REPLACE FUNCTION public.is_admin()
 //    RETURNS boolean
@@ -1250,14 +1295,14 @@ export const Constants = {
 //   BEGIN
 //     RETURN EXISTS (
 //       SELECT 1 FROM public.user_workspaces
-//       WHERE user_id = auth.uid()
+//       WHERE user_id = auth.uid() 
 //         AND organization_id = public.get_current_user_org_id()
-//         AND role = 'admin'
+//         AND role = 'admin' 
 //         AND is_active = true
 //     );
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_profile_audit()
 //   CREATE OR REPLACE FUNCTION public.log_profile_audit()
 //    RETURNS trigger
@@ -1275,7 +1320,7 @@ export const Constants = {
 //         IF v_user_id IS NULL THEN
 //             v_user_id := COALESCE(NEW.id, OLD.id);
 //         END IF;
-//
+//   
 //         IF TG_OP = 'INSERT' THEN
 //             v_action := 'CREATE';
 //             v_entity_name := NEW.full_name;
@@ -1289,24 +1334,24 @@ export const Constants = {
 //             v_entity_name := OLD.full_name;
 //             v_org_id := OLD.organization_id;
 //         END IF;
-//
+//   
 //         IF v_entity_name IS NULL OR v_entity_name = '' THEN
 //             v_entity_name := 'Novo Usuário';
 //         END IF;
-//
+//   
 //         IF v_org_id IS NOT NULL THEN
 //           INSERT INTO public.audit_logs (organization_id, user_id, action, entity_type, entity_name, details)
-//           VALUES (v_org_id, v_user_id, v_action, 'USER', v_entity_name,
+//           VALUES (v_org_id, v_user_id, v_action, 'USER', v_entity_name, 
 //                   CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE row_to_json(NEW) END);
 //         END IF;
 //       EXCEPTION WHEN OTHERS THEN
 //         RAISE WARNING 'log_profile_audit failed: %', SQLERRM;
 //       END;
-//
+//   
 //       RETURN COALESCE(NEW, OLD);
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_transaction_audit()
 //   CREATE OR REPLACE FUNCTION public.log_transaction_audit()
 //    RETURNS trigger
@@ -1323,7 +1368,7 @@ export const Constants = {
 //       IF v_user_id IS NULL THEN
 //           v_user_id := COALESCE(NEW.user_id, OLD.user_id);
 //       END IF;
-//
+//   
 //       IF TG_OP = 'INSERT' THEN
 //           v_action := 'CREATE';
 //           v_entity_name := NEW.description;
@@ -1337,15 +1382,15 @@ export const Constants = {
 //           v_entity_name := OLD.description;
 //           v_org_id := OLD.organization_id;
 //       END IF;
-//
+//   
 //       INSERT INTO public.audit_logs (organization_id, user_id, action, entity_type, entity_name, details)
-//       VALUES (v_org_id, v_user_id, v_action, 'TRANSACTION', v_entity_name,
+//       VALUES (v_org_id, v_user_id, v_action, 'TRANSACTION', v_entity_name, 
 //               CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE row_to_json(NEW) END);
-//
+//   
 //       RETURN COALESCE(NEW, OLD);
 //   END;
 //   $function$
-//
+//   
 // FUNCTION process_recurring_transactions()
 //   CREATE OR REPLACE FUNCTION public.process_recurring_transactions()
 //    RETURNS void
@@ -1364,9 +1409,9 @@ export const Constants = {
 //           ) VALUES (
 //               r.organization_id, r.user_id, r.description, r.amount, r.category, r.type, r.payment_method, r.next_date, r.id
 //           );
-//
+//           
 //           UPDATE public.recurring_transactions
-//           SET next_date = CASE
+//           SET next_date = CASE 
 //               WHEN frequency = 'monthly' THEN next_date + INTERVAL '1 month'
 //               WHEN frequency = 'weekly' THEN next_date + INTERVAL '1 week'
 //               WHEN frequency = 'yearly' THEN next_date + INTERVAL '1 year'
@@ -1374,17 +1419,17 @@ export const Constants = {
 //           END,
 //           updated_at = NOW()
 //           WHERE id = r.id;
-//
+//           
 //           INSERT INTO public.notifications (organization_id, user_id, title, message)
 //           VALUES (
-//               r.organization_id, r.user_id,
-//               'Gasto Recorrente',
+//               r.organization_id, r.user_id, 
+//               'Gasto Recorrente', 
 //               'O gasto fixo "' || r.description || '" foi registrado automaticamente.'
 //           );
 //       END LOOP;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_org_id_on_insert()
 //   CREATE OR REPLACE FUNCTION public.set_org_id_on_insert()
 //    RETURNS trigger
@@ -1398,7 +1443,7 @@ export const Constants = {
 //       RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_transaction_org_id()
 //   CREATE OR REPLACE FUNCTION public.set_transaction_org_id()
 //    RETURNS trigger
@@ -1412,7 +1457,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: audit_logs
@@ -1435,9 +1480,12 @@ export const Constants = {
 // --- INDEXES ---
 // Table: categories
 //   CREATE UNIQUE INDEX categories_nome_tipo_unique ON public.categories USING btree (nome, tipo)
+// Table: plans
+//   CREATE UNIQUE INDEX plans_name_key ON public.plans USING btree (name)
 // Table: subscriptions
 //   CREATE UNIQUE INDEX subscriptions_organization_id_key ON public.subscriptions USING btree (organization_id)
 // Table: transactions
 //   CREATE INDEX transactions_created_at_idx ON public.transactions USING btree (created_at DESC)
 // Table: user_workspaces
 //   CREATE UNIQUE INDEX user_workspaces_user_id_organization_id_key ON public.user_workspaces USING btree (user_id, organization_id)
+
