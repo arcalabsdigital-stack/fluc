@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 
 export const ProtectedRoute = () => {
-  const { session, loading, profile, subscription } = useAuth()
+  const { session, loading, profile, subscription, role } = useAuth()
   const location = useLocation()
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export const ProtectedRoute = () => {
     return <Navigate to="/login" replace />
   }
 
-  const needsOnboarding = profile && !profile.cnpj_ou_cpf
+  const needsOnboarding = profile && role === 'admin' && !profile.cnpj_ou_cpf
 
   if (needsOnboarding && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />

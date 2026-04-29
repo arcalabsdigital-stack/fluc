@@ -377,12 +377,18 @@ export default function Users() {
                     <Badge
                       variant="outline"
                       className={
-                        user.is_active !== false
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                        user.is_active === false
+                          ? 'bg-red-50 text-red-700 border-red-200'
+                          : user.must_change_password
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-green-50 text-green-700 border-green-200'
                       }
                     >
-                      {user.is_active !== false ? 'Ativo' : 'Convite Enviado'}
+                      {user.is_active === false
+                        ? 'Desativado'
+                        : user.must_change_password
+                          ? 'Pendente'
+                          : 'Ativo'}
                     </Badge>
                   </TableCell>
                   <TableCell>
