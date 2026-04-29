@@ -72,6 +72,7 @@ export function Sidebar({
     currentWorkspace,
     loading: authLoading,
     reloadProfile,
+    profile,
   } = useAuth()
   const navigate = useNavigate()
 
@@ -79,24 +80,32 @@ export function Sidebar({
   const [isTimeout, setIsTimeout] = useState(false)
 
   useEffect(() => {
-    if (currentWorkspace?.name) {
+    const displayName = profile?.razao_social_ou_nome || profile?.full_name
+    if (displayName) {
+      setWorkspaceName(displayName)
+      setIsTimeout(false)
+    } else if (
+      currentWorkspace?.name &&
+      currentWorkspace.name !== 'Minha Organização'
+    ) {
       setWorkspaceName(currentWorkspace.name)
       setIsTimeout(false)
     } else if (!authLoading) {
       setWorkspaceName('Meu Workspace')
     }
-  }, [currentWorkspace, authLoading])
+  }, [currentWorkspace, profile, authLoading])
 
   useEffect(() => {
     let timeoutId: any
-    if (!currentWorkspace?.name && authLoading) {
+    const displayName = profile?.razao_social_ou_nome || profile?.full_name
+    if (!displayName && !currentWorkspace?.name && authLoading) {
       timeoutId = setTimeout(() => {
         setIsTimeout(true)
         setWorkspaceName('Workspace não encontrado')
       }, 5000)
     }
     return () => clearTimeout(timeoutId)
-  }, [currentWorkspace, authLoading])
+  }, [currentWorkspace, profile, authLoading])
 
   const handleRetryWorkspace = () => {
     setIsTimeout(false)

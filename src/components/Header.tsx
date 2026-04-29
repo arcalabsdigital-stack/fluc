@@ -74,7 +74,11 @@ export function Header() {
   const userInitials = getInitials(userName)
   const avatarUrl = profile?.avatar_url
 
-  const orgName = currentWorkspace?.name || 'Workspace'
+  const orgName =
+    profile?.razao_social_ou_nome ||
+    profile?.full_name ||
+    currentWorkspace?.name ||
+    'Meu Workspace'
 
   const handleSignOut = async () => {
     await signOut()
@@ -82,8 +86,8 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-[#F8F9FB]/80 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-gray-100 gap-2">
-      <div className="flex items-center gap-2 flex-1 max-w-xs sm:max-w-md">
+    <header className="sticky top-0 z-30 w-full bg-[#F8F9FB]/80 backdrop-blur-md px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-gray-100 gap-2">
+      <div className="flex items-center gap-2 flex-1 min-w-0 sm:max-w-md">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button
@@ -115,39 +119,39 @@ export function Header() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-1 sm:gap-4">
         <Button
           variant="ghost"
           size="icon"
-          className="bg-white rounded-full shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 relative h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0"
+          className="bg-white rounded-full shadow-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 relative h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 hidden sm:flex"
         >
           <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
         </Button>
 
-        <div className="h-8 w-px bg-gray-200 mx-2 hidden sm:block"></div>
+        <div className="h-8 w-px bg-gray-200 mx-1 sm:mx-2 hidden sm:block"></div>
 
-        <div className="flex items-center gap-3 pl-2">
+        <div className="flex items-center gap-2 sm:gap-3 sm:pl-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="hidden sm:flex items-center gap-2 px-3 h-10 border border-gray-100 bg-white hover:bg-gray-50 shadow-sm rounded-full"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 h-8 sm:h-10 border border-gray-100 bg-white hover:bg-gray-50 shadow-sm rounded-full"
               >
                 <div className="flex flex-col items-end text-right">
-                  <span className="text-sm font-bold text-gray-900 leading-none truncate max-w-[150px]">
+                  <span className="text-xs sm:text-sm font-bold text-gray-900 leading-none truncate max-w-[90px] sm:max-w-[150px]">
                     {orgName}
                   </span>
-                  <span className="text-[10px] text-gray-500 capitalize leading-none mt-1">
+                  <span className="text-[9px] sm:text-[10px] text-gray-500 capitalize leading-none mt-1 hidden sm:block">
                     {currentWorkspace?.role || 'Membro'}
                   </span>
                 </div>
-                <ChevronsUpDown className="h-4 w-4 text-gray-400" />
+                <ChevronsUpDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-64 rounded-xl p-2 shadow-lg"
+              className="w-[280px] sm:w-64 max-w-[80vw] rounded-xl p-2 shadow-lg"
             >
               <DropdownMenuLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 py-1">
                 Seus Workspaces
@@ -193,13 +197,15 @@ export function Header() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Avatar className="h-10 w-10 border-2 border-white shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-white shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
                 <AvatarImage
                   src={avatarUrl || undefined}
                   alt={userName}
                   className="object-cover"
                 />
-                <AvatarFallback>{userInitials}</AvatarFallback>
+                <AvatarFallback className="text-xs sm:text-sm">
+                  {userInitials}
+                </AvatarFallback>
               </Avatar>
             </PopoverTrigger>
             <PopoverContent
