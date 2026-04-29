@@ -163,13 +163,14 @@ export default function Onboarding() {
     try {
       const tipoDoc = rawDoc.length === 14 ? 'CNPJ' : 'CPF'
       const orgName = docType === 'CNPJ' ? corporateName : fullName
+      const razaoSocialOuNome = orgName.trim() || 'Minha Organização'
 
       const { error: orgError } = await supabase
         .from('organizations')
         .update({
           cnpj: rawDoc,
           corporate_name: docType === 'CNPJ' ? corporateName : null,
-          name: orgName,
+          name: razaoSocialOuNome,
         })
         .eq('id', currentWorkspace.id)
 
@@ -181,7 +182,7 @@ export default function Onboarding() {
           full_name: fullName,
           cnpj_ou_cpf: rawDoc,
           tipo_documento: tipoDoc,
-          razao_social_ou_nome: orgName,
+          razao_social_ou_nome: razaoSocialOuNome,
           telefone: rawPhone,
         })
         .eq('id', user.id)
