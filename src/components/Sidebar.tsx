@@ -80,15 +80,14 @@ export function Sidebar({
   const [isTimeout, setIsTimeout] = useState(false)
 
   useEffect(() => {
-    const displayName = profile?.razao_social_ou_nome || profile?.full_name
-    if (displayName) {
-      setWorkspaceName(displayName)
-      setIsTimeout(false)
-    } else if (
+    if (
       currentWorkspace?.name &&
       currentWorkspace.name !== 'Minha Organização'
     ) {
       setWorkspaceName(currentWorkspace.name)
+      setIsTimeout(false)
+    } else if (profile?.razao_social_ou_nome || profile?.full_name) {
+      setWorkspaceName(profile.razao_social_ou_nome || profile.full_name)
       setIsTimeout(false)
     } else if (!authLoading) {
       setWorkspaceName('Meu Workspace')

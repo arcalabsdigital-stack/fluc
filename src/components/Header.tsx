@@ -74,11 +74,10 @@ export function Header() {
   const userInitials = getInitials(userName)
   const avatarUrl = profile?.avatar_url
 
-  const orgName =
-    profile?.razao_social_ou_nome ||
-    profile?.full_name ||
-    currentWorkspace?.name ||
-    'Meu Workspace'
+  let orgName = currentWorkspace?.name || 'Meu Workspace'
+  if (orgName === 'Minha Organização' || orgName === 'Meu Workspace') {
+    orgName = profile?.razao_social_ou_nome || profile?.full_name || orgName
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -160,9 +159,11 @@ export function Header() {
                 {workspaces.map((ws) => (
                   <DropdownMenuItem
                     key={ws.id}
-                    onClick={() =>
-                      ws.id !== currentWorkspace?.id && switchWorkspace(ws.id)
-                    }
+                    onSelect={() => {
+                      if (ws.id !== currentWorkspace?.id) {
+                        switchWorkspace(ws.id)
+                      }
+                    }}
                     className="flex items-center justify-between cursor-pointer py-2 px-2 rounded-lg"
                   >
                     <div className="flex items-center gap-3 overflow-hidden">

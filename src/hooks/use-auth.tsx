@@ -180,14 +180,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const switchWorkspace = async (orgId: string) => {
     if (!user) return
-    setLoading(true)
-    await supabase
-      .from('profiles')
-      .update({ organization_id: orgId })
-      .eq('id', user.id)
-    await loadProfile(user.id)
-    setLoading(false)
-    window.location.href = '/'
+    try {
+      setLoading(true)
+      const { error } = await supabase
+        .from('profiles')
+        .update({ organization_id: orgId })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      await loadProfile(user.id)
+      window.location.href = '/'
+    } catch (err) {
+      console.error('Erro ao trocar workspace:', err)
+      setLoading(false)
+    }
   }
 
   const signUp = async (
