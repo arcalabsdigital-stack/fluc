@@ -8,6 +8,8 @@ import {
   LogOut,
   Users,
   History,
+  FileText,
+  TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -211,6 +213,20 @@ export function Sidebar({
               label="Histórico"
               to="/history"
               isActive={pathname === '/history'}
+              onClick={onNavigate}
+            />
+            <SidebarItem
+              icon={FileText}
+              label="DRE"
+              to="/dre"
+              isActive={pathname === '/dre'}
+              onClick={onNavigate}
+            />
+            <SidebarItem
+              icon={TrendingUp}
+              label="Valuation"
+              to="/valuation"
+              isActive={pathname === '/valuation'}
               onClick={onNavigate}
             />
           </div>
