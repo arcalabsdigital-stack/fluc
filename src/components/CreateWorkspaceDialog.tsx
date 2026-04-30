@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -24,15 +24,56 @@ export function CreateWorkspaceDialog({
   open,
   onOpenChange,
 }: CreateWorkspaceDialogProps) {
-  const [name, setName] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [corporateName, setCorporateName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingCnpj, setIsLoadingCnpj] = useState(false)
   const { switchWorkspace } = useAuth()
+
+  const formatCnpj = (value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .slice(0, 18)
+  }
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCnpj(formatCnpj(e.target.value))
+  }
+
+  useEffect(() => {
+    const unmaskedCnpj = cnpj.replace(/\D/g, '')
+    if (unmaskedCnpj.length === 14) {
+      const fetchCnpj = async () => {
+        setIsLoadingCnpj(true)
+        try {
+          const res = await fetch(
+            `https://brasilapi.com.br/api/cnpj/v1/${unmaskedCnpj}`,
+          )
+          if (!res.ok) throw new Error('CNPJ não encontrado')
+          const data = await res.json()
+          if (data.razao_social) {
+            setCorporateName(data.razao_social)
+            toast.success('Dados da empresa carregados!')
+          }
+        } catch (error) {
+          toast.error('CNPJ não encontrado. Preencha manualmente.')
+        } finally {
+          setIsLoadingCnpj(false)
+        }
+      }
+
+      const timeoutId = setTimeout(fetchCnpj, 500)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [cnpj])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !cnpj || !corporateName) {
+    if (!cnpj || !corporateName) {
       toast.error('Preencha todos os campos obrigatórios.')
       return
     }
@@ -40,7 +81,7 @@ export function CreateWorkspaceDialog({
     setIsLoading(true)
     try {
       const { data, error } = await supabase.rpc('create_new_workspace', {
-        p_name: name,
+        p_name: corporateName,
         p_cnpj: cnpj,
         p_corporate_name: corporateName,
       })
@@ -49,7 +90,6 @@ export function CreateWorkspaceDialog({
 
       toast.success('Workspace criado com sucesso!')
       onOpenChange(false)
-      setName('')
       setCnpj('')
       setCorporateName('')
 
@@ -77,14 +117,23 @@ export function CreateWorkspaceDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome do Workspace (Fantasia)</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Ex: Minha Empresa"
-            />
+            <Label htmlFor="cnpj">CNPJ</Label>
+            <div className="relative">
+              <Input
+                id="cnpj"
+                value={cnpj}
+                onChange={handleCnpjChange}
+                required
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+                disabled={isLoading}
+              />
+              {isLoadingCnpj && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="corporateName">Razão Social</Label>
@@ -94,16 +143,7 @@ export function CreateWorkspaceDialog({
               onChange={(e) => setCorporateName(e.target.value)}
               required
               placeholder="Minha Empresa LTDA"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="cnpj">CNPJ</Label>
-            <Input
-              id="cnpj"
-              value={cnpj}
-              onChange={(e) => setCnpj(e.target.value)}
-              required
-              placeholder="00.000.000/0000-00"
+              disabled={isLoading || isLoadingCnpj}
             />
           </div>
           <DialogFooter className="pt-4">
