@@ -168,9 +168,9 @@ export default function Onboarding() {
       const { error: orgError } = await supabase
         .from('organizations')
         .update({
+          name: razaoSocialOuNome,
           cnpj: rawDoc,
           corporate_name: docType === 'CNPJ' ? corporateName : null,
-          name: razaoSocialOuNome,
         })
         .eq('id', currentWorkspace.id)
 
@@ -179,10 +179,11 @@ export default function Onboarding() {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName,
+          organization_id: currentWorkspace.id,
+          razao_social_ou_nome: razaoSocialOuNome,
           cnpj_ou_cpf: rawDoc,
           tipo_documento: tipoDoc,
-          razao_social_ou_nome: razaoSocialOuNome,
+          full_name: fullName,
           telefone: rawPhone,
         })
         .eq('id', user.id)
