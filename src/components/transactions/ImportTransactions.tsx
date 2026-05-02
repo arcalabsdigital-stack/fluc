@@ -84,6 +84,15 @@ export function ImportTransactions({ onSuccess }: ImportTransactionsProps) {
         throw new Error('O arquivo está vazio ou contém apenas o cabeçalho.')
       }
 
+      const { data: dbCategories } = await supabase
+        .from('categories')
+        .select('id, nome')
+      const categoryMap = new Map(
+        dbCategories?.map((c) => [c.nome.toLowerCase().trim(), c.id]),
+      )
+      const unknownCategoryId =
+        categoryMap.get('desconhecido') || categoryMap.get('outros')
+
       let errorCount = 0
       const transactionsToCreate: any[] = []
 
@@ -129,11 +138,16 @@ export function ImportTransactions({ onSuccess }: ImportTransactionsProps) {
 
           if (!categoryName) throw new Error('Categoria inválida')
 
+          let categoryId = categoryMap.get(categoryName.toLowerCase().trim())
+          if (!categoryId) {
+            categoryId = unknownCategoryId || 'Desconhecido'
+          }
+
           transactionsToCreate.push({
             date: date.toISOString().split('T')[0],
             description: description,
             amount: amount,
-            category: categoryName,
+            category: categoryId,
             type: type,
             payment_method: paymentMethod,
             notes: notes,

@@ -108,10 +108,7 @@ export function TransactionForm({
   const currentFormaPagamento = form.watch('forma_pagamento_id')
   const parcelas = form.watch('parcelas')
 
-  const isInstallmentEligible =
-    !transactionToEdit &&
-    (currentFormaPagamento === FormaPagamento.CartaoCredito ||
-      currentFormaPagamento === FormaPagamento.Boleto)
+  const isInstallmentEligible = !transactionToEdit
 
   useEffect(() => {
     if (categories && categories.length > 0) {
@@ -286,50 +283,55 @@ export function TransactionForm({
               <FormField
                 control={form.control}
                 name="categoria_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Array.from(
-                          new Set(
-                            categories
-                              .filter((c) => c.tipo === form.watch('tipo_id'))
-                              .map((c) => c.grupo),
-                          ),
-                        ).map((grupo) => (
-                          <SelectGroup key={grupo}>
-                            <SelectLabel>{grupo}</SelectLabel>
-                            {categories
-                              .filter(
-                                (c) =>
-                                  c.tipo === form.watch('tipo_id') &&
-                                  c.grupo === grupo,
-                              )
-                              .map((category) => (
-                                <SelectItem
-                                  key={category.id}
-                                  value={category.id}
-                                >
-                                  {category.nome}
-                                </SelectItem>
-                              ))}
-                          </SelectGroup>
-                        ))}
-                      </SelectContent>{' '}
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const safeCategories = categories || []
+                  const filteredCategories = safeCategories.filter(
+                    (c) => c.tipo === form.watch('tipo_id'),
+                  )
+                  const grupos = Array.from(
+                    new Set(filteredCategories.map((c) => c.grupo)),
+                  )
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Categoria</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {grupos.map((grupo) => (
+                            <SelectGroup key={grupo}>
+                              <SelectLabel>{grupo}</SelectLabel>
+                              {filteredCategories
+                                .filter((c) => c.grupo === grupo)
+                                .map((category) => (
+                                  <SelectItem
+                                    key={category.id}
+                                    value={category.id}
+                                  >
+                                    {category.nome}
+                                  </SelectItem>
+                                ))}
+                            </SelectGroup>
+                          ))}
+                          {grupos.length === 0 && (
+                            <SelectItem value="empty" disabled>
+                              Nenhuma categoria encontrada
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )
+                }}
               />
             </div>
 
