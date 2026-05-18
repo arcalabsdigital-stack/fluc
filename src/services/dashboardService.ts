@@ -8,11 +8,11 @@ import {
 import { format } from 'date-fns'
 
 export const dashboardService = {
-  async getKPIs(): Promise<DashboardKPIs> {
-    const today = format(new Date(), 'yyyy-MM-dd')
+  async getKPIs(date: Date = new Date()): Promise<DashboardKPIs> {
+    const targetDate = format(date, 'yyyy-MM-dd')
     // RPC call respects RLS because we updated it to SECURITY INVOKER
     const { data, error } = await supabase.rpc('get_dashboard_kpi', {
-      p_date_now: today,
+      p_date_now: targetDate,
     })
 
     if (error) {
@@ -51,12 +51,15 @@ export const dashboardService = {
     }))
   },
 
-  async getFutureTransactions(endDate: Date): Promise<Transacao[]> {
-    const today = format(new Date(), 'yyyy-MM-dd')
+  async getFutureTransactions(
+    endDate: Date,
+    startDate: Date = new Date(),
+  ): Promise<Transacao[]> {
+    const start = format(startDate, 'yyyy-MM-dd')
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
-      .gt('date', today)
+      .gt('date', start)
       .lte('date', format(endDate, 'yyyy-MM-dd'))
       .order('date', { ascending: true })
 

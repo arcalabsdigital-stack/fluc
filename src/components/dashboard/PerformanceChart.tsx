@@ -14,17 +14,19 @@ import { cn } from '@/lib/utils'
 
 interface PerformanceChartProps {
   data: ChartDataPoint[]
+  periodLabel?: string
 }
 
-export function PerformanceChart({ data }: PerformanceChartProps) {
+export function PerformanceChart({ data, periodLabel }: PerformanceChartProps) {
   const hasData =
     data.length > 0 && data.some((d) => d.revenue > 0 || d.expenses > 0)
 
   return (
     <Card className="rounded-3xl border-none shadow-sm h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-bold">
-          Desempenho Financeiro (Este Mês)
+        <CardTitle className="text-lg font-bold capitalize">
+          Desempenho Financeiro{' '}
+          {periodLabel ? `(${periodLabel})` : '(Este Mês)'}
         </CardTitle>
         <div className="flex items-center gap-4 text-xs font-medium">
           <div className="flex items-center gap-1.5">
@@ -128,7 +130,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
           </ChartContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-gray-400 text-sm">
-            Nenhum dado para este mês
+            Nenhum dado para este período
           </div>
         )}
       </CardContent>

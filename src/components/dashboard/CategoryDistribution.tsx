@@ -4,16 +4,20 @@ import { cn } from '@/lib/utils'
 
 interface CategoryDistributionProps {
   data: CategoryDistribution[]
+  periodLabel?: string
 }
 
-export function CategoryDistributionChart({ data }: CategoryDistributionProps) {
+export function CategoryDistributionChart({
+  data,
+  periodLabel,
+}: CategoryDistributionProps) {
   const hasData = data.length > 0
 
   return (
     <Card className="rounded-3xl border-none shadow-sm h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="text-lg font-bold">
-          Top Categorias de Gastos
+        <CardTitle className="text-lg font-bold capitalize">
+          Top Categorias de Gastos {periodLabel ? `(${periodLabel})` : ''}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 overflow-auto">
@@ -46,7 +50,7 @@ export function CategoryDistributionChart({ data }: CategoryDistributionProps) {
           </div>
         ) : (
           <div className="flex h-full items-center justify-center text-gray-400 text-sm min-h-[200px]">
-            Sem gastos este mês
+            Sem gastos neste período
           </div>
         )}
       </CardContent>

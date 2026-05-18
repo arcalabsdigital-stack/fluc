@@ -12,16 +12,20 @@ import { ChartContainer } from '@/components/ui/chart'
 
 interface ExpenseDistributionProps {
   data: PaymentMethodDistribution[]
+  periodLabel?: string
 }
 
-export function ExpenseDistribution({ data }: ExpenseDistributionProps) {
+export function ExpenseDistribution({
+  data,
+  periodLabel,
+}: ExpenseDistributionProps) {
   const hasData = data.length > 0 && data.some((d) => d.value > 0)
 
   return (
     <Card className="rounded-3xl border-none shadow-sm h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="text-lg font-bold">
-          Fluxo por Pagamento (Despesas)
+        <CardTitle className="text-lg font-bold capitalize">
+          Fluxo por Pagamento {periodLabel ? `(${periodLabel})` : ''}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 min-h-[250px] relative">
@@ -65,7 +69,7 @@ export function ExpenseDistribution({ data }: ExpenseDistributionProps) {
           </ChartContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-gray-400 text-sm">
-            Nenhum dado para este mês
+            Nenhum dado para este período
           </div>
         )}
       </CardContent>

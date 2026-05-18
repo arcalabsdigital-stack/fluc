@@ -33,6 +33,7 @@ export interface ProjectionDataPoint {
 }
 
 export const useDashboard = () => {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [projectionData, setProjectionData] = useState<ProjectionDataPoint[]>(
     [],
@@ -70,25 +71,29 @@ export const useDashboard = () => {
       // We fetch data regardless of role, trusting RLS and service logic to filter
       const [kpiData, recentData, monthData, futureData, recurringData] =
         await Promise.all([
-          dashboardService.getKPIs(),
+          dashboardService.getKPIs(selectedDate),
           dashboardService.getRecentTransactions(6),
           dashboardService.getTransactionsForPeriod(
-            startOfMonth(new Date()),
-            endOfMonth(new Date()),
+            startOfMonth(selectedDate),
+            endOfMonth(selectedDate),
           ),
-          dashboardService.getFutureTransactions(addMonths(new Date(), 12)),
+          dashboardService.getFutureTransactions(
+            addMonths(selectedDate, 12),
+            selectedDate,
+          ),
           dashboardService.getRecurringTransactions(),
         ])
 
       setKpis(kpiData)
       setRecentTransactions(recentData)
-      processChartData(monthData)
+      processChartData(monthData, selectedDate)
       processCategoryData(monthData)
       processPaymentData(monthData)
       processProjectionData(
         kpiData?.totalBalance || 0,
         futureData,
         recurringData,
+        selectedDate,
       )
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -96,13 +101,13 @@ export const useDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }, [role])
+  }, [role, selectedDate])
 
   // Process data for charts
-  const processChartData = (transactions: Transacao[]) => {
+  const processChartData = (transactions: Transacao[], date: Date) => {
     // For collaborators, 'transactions' might only contain 1 item if it falls in the current month
-    const start = startOfMonth(new Date())
-    const end = endOfMonth(new Date())
+    const start = startOfMonth(date)
+    const end = endOfMonth(date)
     const days = eachDayOfInterval({ start, end })
 
     const data: ChartDataPoint[] = days.map((day) => {
@@ -199,8 +204,9 @@ export const useDashboard = () => {
     currentBalance: number,
     futureTransactions: Transacao[],
     recurringTransactions: any[],
+    baseDate: Date,
   ) => {
-    const today = new Date()
+    const today = baseDate
 
     // Generate projection for 12 periods, starting with the current month
     const months = Array.from({ length: 12 }).map((_, i) => {
@@ -270,6 +276,8 @@ export const useDashboard = () => {
   }, [fetchData, storeTransactions]) // Refresh when transactions change in store
 
   return {
+    selectedDate,
+    setSelectedDate,
     kpis,
     recentTransactions,
     chartData,

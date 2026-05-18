@@ -10,9 +10,22 @@ import { CashFlowProjection } from '@/components/dashboard/CashFlowProjection'
 import { KPIMetric } from '@/lib/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { format, subMonths, addMonths } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 const Index = () => {
   const {
+    selectedDate,
+    setSelectedDate,
     kpis,
     recentTransactions,
     chartData,
@@ -113,8 +126,78 @@ const Index = () => {
     )
   }
 
+  const periodLabel = format(selectedDate, 'MMMM yyyy', { locale: ptBR })
+
   return (
     <div className="flex flex-col gap-4 sm:gap-6 animate-fade-in pb-10 px-0 sm:px-0">
+      {/* Sticky Navigation Bar */}
+      <div className="sticky top-0 z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 mb-2 border-b border-border/50 gap-4">
+        <h2 className="text-xl font-semibold hidden sm:block">Visão Geral</h2>
+        <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto justify-between sm:justify-start">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSelectedDate(subMonths(selectedDate, 1))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Select
+              value={selectedDate.getMonth().toString()}
+              onValueChange={(val) => {
+                const newDate = new Date(selectedDate)
+                newDate.setMonth(parseInt(val))
+                setSelectedDate(newDate)
+              }}
+            >
+              <SelectTrigger className="w-[120px] font-medium capitalize">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <SelectItem
+                    key={i}
+                    value={i.toString()}
+                    className="capitalize"
+                  >
+                    {format(new Date(2024, i, 1), 'MMMM', { locale: ptBR })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={selectedDate.getFullYear().toString()}
+              onValueChange={(val) => {
+                const newDate = new Date(selectedDate)
+                newDate.setFullYear(parseInt(val))
+                setSelectedDate(newDate)
+              }}
+            >
+              <SelectTrigger className="w-[90px] font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 10 }).map((_, i) => {
+                  const year = new Date().getFullYear() - 5 + i
+                  return (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSelectedDate(addMonths(selectedDate, 1))}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {/* KPI Row */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
         {kpiData.map((kpi, index) => (
@@ -137,7 +220,7 @@ const Index = () => {
           {/* Middle Section: Performance + Categories */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 h-auto min-h-[400px]">
             <div className="xl:col-span-2 h-[400px] xl:h-full">
-              <PerformanceChart data={chartData} />
+              <PerformanceChart data={chartData} periodLabel={periodLabel} />
             </div>
             <div className="h-[400px] xl:h-full">
               <BudgetsProgress />
@@ -150,7 +233,10 @@ const Index = () => {
               <ComparativeChart />
             </div>
             <div className="h-[350px] xl:h-full">
-              <CategoryDistributionChart data={categoryDistribution} />
+              <CategoryDistributionChart
+                data={categoryDistribution}
+                periodLabel={periodLabel}
+              />
             </div>
           </div>
 
@@ -160,7 +246,10 @@ const Index = () => {
               <RecentTransactions transactions={recentTransactions} />
             </div>
             <div className="h-full min-h-[400px]">
-              <ExpenseDistribution data={paymentDistribution} />
+              <ExpenseDistribution
+                data={paymentDistribution}
+                periodLabel={periodLabel}
+              />
             </div>
           </div>
         </TabsContent>
