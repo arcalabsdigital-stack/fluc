@@ -10,6 +10,7 @@ import {
   History,
   FileText,
   TrendingUp,
+  Target,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -190,6 +191,13 @@ export function Sidebar({
               label="Início"
               to="/"
               isActive={pathname === '/'}
+              onClick={onNavigate}
+            />
+            <SidebarItem
+              icon={Target}
+              label="Orçamentos"
+              to="/budgets"
+              isActive={pathname === '/budgets'}
               onClick={onNavigate}
             />
             <SidebarItem

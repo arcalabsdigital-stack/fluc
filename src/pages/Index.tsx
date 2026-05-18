@@ -7,6 +7,7 @@ import { ExpenseDistribution } from '@/components/dashboard/ExpenseDistribution'
 import { BudgetsProgress } from '@/components/dashboard/BudgetsProgress'
 import { ComparativeChart } from '@/components/dashboard/ComparativeChart'
 import { CashFlowProjection } from '@/components/dashboard/CashFlowProjection'
+import { BreakevenCard } from '@/components/dashboard/BreakevenCard'
 import { KPIMetric } from '@/lib/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -238,6 +239,10 @@ const Index = () => {
                 periodLabel={periodLabel}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:gap-6">
+            <BreakevenCard />
           </div>
 
           {/* Bottom Section: Recent Transactions + Expense Breakdown */}

@@ -28,6 +28,7 @@ export interface FilterState {
   type: string
   category: string
   paymentMethod: string
+  status: string
   dateRange: DateRange | undefined
 }
 
@@ -48,6 +49,7 @@ export function TransactionFilters({
       type: 'all',
       category: 'all',
       paymentMethod: 'all',
+      status: 'all',
       dateRange: undefined,
     })
   }
@@ -57,6 +59,7 @@ export function TransactionFilters({
     filters.type !== 'all' ||
     filters.category !== 'all' ||
     filters.paymentMethod !== 'all' ||
+    filters.status !== 'all' ||
     filters.dateRange !== undefined
 
   return (
@@ -175,6 +178,23 @@ export function TransactionFilters({
                 {method}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        {/* Status Filter */}
+        <Select
+          value={filters.status || 'all'}
+          onValueChange={(val) =>
+            setFilters((prev) => ({ ...prev, status: val }))
+          }
+        >
+          <SelectTrigger className="w-[120px] bg-white h-9 text-xs">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="pago">Pago</SelectItem>
+            <SelectItem value="aberto">Em Aberto</SelectItem>
           </SelectContent>
         </Select>
 

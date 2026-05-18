@@ -48,6 +48,7 @@ export const dashboardService = {
       tipo_id: row.type as TipoTransacao,
       forma_pagamento_id: row.payment_method as FormaPagamento,
       observacoes: row.notes,
+      status: row.status,
     }))
   },
 
@@ -77,6 +78,7 @@ export const dashboardService = {
       tipo_id: row.type as TipoTransacao,
       forma_pagamento_id: row.payment_method as FormaPagamento,
       observacoes: row.notes,
+      status: row.status,
     }))
   },
 
@@ -116,6 +118,7 @@ export const dashboardService = {
       tipo_id: row.type as TipoTransacao,
       forma_pagamento_id: row.payment_method as FormaPagamento,
       observacoes: row.notes,
+      status: row.status,
     }))
   },
 }

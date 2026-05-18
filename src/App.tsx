@@ -17,6 +17,7 @@ import Search from './pages/Search'
 import Checkout from './pages/Checkout'
 import Dre from './pages/Dre'
 import Valuation from './pages/Valuation'
+import Budgets from './pages/Budgets'
 import { TransactionProvider } from '@/stores/useTransactionStore'
 import { AuthProvider } from '@/hooks/use-auth'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/search" element={<Search />} />
                 <Route path="/dre" element={<Dre />} />
                 <Route path="/valuation" element={<Valuation />} />
+                <Route path="/budgets" element={<Budgets />} />
               </Route>
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/checkout" element={<Checkout />} />

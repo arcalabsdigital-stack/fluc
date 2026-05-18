@@ -33,4 +33,5 @@ export interface Transacao {
   recurring_transaction_id?: string | null
   is_recurring?: boolean
   parcelas?: number
+  status?: string
 }

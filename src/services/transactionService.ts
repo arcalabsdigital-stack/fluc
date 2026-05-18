@@ -21,6 +21,7 @@ const mapToTransacao = (row: any): Transacao => ({
   observacoes: row.notes,
   recurring_transaction_id: row.recurring_transaction_id,
   is_recurring: !!row.recurring_transaction_id,
+  status: row.status,
 })
 
 // Helper to map Transacao to DB row
@@ -34,6 +35,7 @@ const mapToRow = (transaction: Omit<Transacao, 'id'>, userId: string) => ({
   payment_method: transaction.forma_pagamento_id,
   notes: transaction.observacoes,
   recurring_transaction_id: transaction.recurring_transaction_id,
+  status: transaction.status || 'pago',
 })
 
 export const transactionService = {
@@ -78,6 +80,10 @@ export const transactionService = {
 
       if (filters.paymentMethod !== 'all') {
         query = query.eq('payment_method', filters.paymentMethod)
+      }
+
+      if (filters.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status)
       }
 
       if (filters.dateRange?.from) {
@@ -286,6 +292,7 @@ export const transactionService = {
       updates.payment_method = transaction.forma_pagamento_id
     if (transaction.observacoes !== undefined)
       updates.notes = transaction.observacoes
+    if (transaction.status) updates.status = transaction.status
 
     const { data, error } = await supabase
       .from('transactions')

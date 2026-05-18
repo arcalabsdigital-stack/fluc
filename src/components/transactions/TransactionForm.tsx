@@ -73,6 +73,7 @@ const formSchema = z.object({
   observacoes: z.string().optional(),
   is_recurring: z.boolean().default(false),
   parcelas: z.coerce.number().min(1).default(1),
+  status: z.string().default('pago'),
 })
 
 interface TransactionFormProps {
@@ -131,6 +132,7 @@ export function TransactionForm({
         observacoes: transactionToEdit.observacoes || '',
         is_recurring: !!transactionToEdit.recurring_transaction_id,
         parcelas: 1,
+        status: transactionToEdit.status || 'pago',
       })
     } else {
       form.reset({
@@ -143,6 +145,7 @@ export function TransactionForm({
         data: new Date(),
         is_recurring: false,
         parcelas: 1,
+        status: 'pago',
       })
     }
   }, [transactionToEdit, form, open])
@@ -181,34 +184,73 @@ export function TransactionForm({
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="tipo_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(TipoTransacao).map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={(val) => {
+                        if (
+                          transactionToEdit?.status === 'pago' &&
+                          val === 'aberto'
+                        ) {
+                          toast.error(
+                            'Transações pagas não podem ser reabertas. Exclua e crie uma nova.',
+                          )
+                          return
+                        }
+                        field.onChange(val)
+                      }}
+                      value={field.value}
+                      disabled={transactionToEdit?.status === 'pago'}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pago">Pago</SelectItem>
+                        <SelectItem value="aberto">Em Aberto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tipo_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(TipoTransacao).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

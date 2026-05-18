@@ -13,6 +13,7 @@ import useTransactionStore from '@/stores/useTransactionStore'
 import { Transacao } from '@/lib/types'
 import { useAuth } from '@/hooks/use-auth'
 import AccessDenied from '@/pages/AccessDenied'
+import { WeeklyMaturityCard } from '@/components/payments/WeeklyMaturityCard'
 
 const Payments = () => {
   const { transactions, fetchTransactions, isLoading } = useTransactionStore()
@@ -26,6 +27,7 @@ const Payments = () => {
     type: 'all',
     category: 'all',
     paymentMethod: 'all',
+    status: 'all',
     dateRange: undefined,
   })
 
@@ -85,6 +87,9 @@ const Payments = () => {
           </div>
         )}
       </div>
+
+      {!isVisitor && <WeeklyMaturityCard />}
+
       <TransactionFilters filters={filters} setFilters={setFilters} />
 
       {showLoading ? (
