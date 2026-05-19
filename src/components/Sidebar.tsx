@@ -226,15 +226,20 @@ export function Sidebar({
             <SidebarItem
               icon={FileText}
               label="DRE"
-              to="/dre"
-              isActive={pathname === '/dre'}
+              to="/valuation?tab=dre"
+              isActive={
+                pathname === '/valuation' && location.search.includes('tab=dre')
+              }
               onClick={onNavigate}
             />
             <SidebarItem
               icon={TrendingUp}
               label="Valuation"
               to="/valuation"
-              isActive={pathname === '/valuation'}
+              isActive={
+                pathname === '/valuation' &&
+                !location.search.includes('tab=dre')
+              }
               onClick={onNavigate}
             />
           </div>

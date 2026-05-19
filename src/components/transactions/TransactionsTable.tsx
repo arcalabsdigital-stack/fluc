@@ -21,8 +21,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Transacao, TipoTransacao } from '@/lib/types'
 import { format } from 'date-fns'
-import { Edit, Trash2, Download } from 'lucide-react'
+import { Edit, Trash2, Download, Check, Clock } from 'lucide-react'
 import useTransactionStore from '@/stores/useTransactionStore'
+import { cn } from '@/lib/utils'
 import { ImportTransactions } from './ImportTransactions'
 
 interface TransactionsTableProps {
@@ -38,7 +39,14 @@ export function TransactionsTable({
   onImportSuccess,
   isVisitor = false,
 }: TransactionsTableProps) {
-  const { categories, deleteTransaction } = useTransactionStore()
+  const { categories, deleteTransaction, updateTransaction } =
+    useTransactionStore()
+
+  const handleToggleStatus = (transaction: Transacao) => {
+    if (isVisitor || !updateTransaction) return
+    const newStatus = transaction.status === 'pago' ? 'pendente' : 'pago'
+    updateTransaction(transaction.id, { status: newStatus })
+  }
 
   const getCategoryName = (id: string) => {
     const category = categories.find((c) => c.id === id)
@@ -117,6 +125,9 @@ export function TransactionsTable({
               <TableHead className="lg:w-[140px] lg:whitespace-nowrap lg:truncate">
                 Forma de Pagamento
               </TableHead>
+              <TableHead className="w-[110px] text-center lg:whitespace-nowrap">
+                Status
+              </TableHead>
               {!isVisitor && (
                 <TableHead className="w-[100px] text-right lg:whitespace-nowrap sticky right-0 z-30 bg-gray-50 shadow-[-1px_0_0_#e5e7eb]">
                   Ações
@@ -176,6 +187,30 @@ export function TransactionsTable({
                   title={transaction.forma_pagamento_id}
                 >
                   {transaction.forma_pagamento_id}
+                </TableCell>
+                <TableCell className="text-center lg:whitespace-nowrap">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'h-7 px-2 text-xs font-medium rounded-full transition-colors',
+                      transaction.status === 'pago'
+                        ? 'text-green-700 bg-green-50 hover:bg-green-100 hover:text-green-800'
+                        : 'text-amber-700 bg-amber-50 hover:bg-amber-100 hover:text-amber-800',
+                    )}
+                    onClick={() => handleToggleStatus(transaction)}
+                    disabled={isVisitor}
+                  >
+                    {transaction.status === 'pago' ? (
+                      <span className="flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Pago
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> Pendente
+                      </span>
+                    )}
+                  </Button>
                 </TableCell>
                 {!isVisitor && (
                   <TableCell className="text-right lg:whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 shadow-[-1px_0_0_#e5e7eb] transition-colors">
