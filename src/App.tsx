@@ -15,7 +15,6 @@ import Users from './pages/Users'
 import History from './pages/History'
 import Search from './pages/Search'
 import Checkout from './pages/Checkout'
-import Dre from './pages/Dre'
 import Valuation from './pages/Valuation'
 import Budgets from './pages/Budgets'
 import { TransactionProvider } from '@/stores/useTransactionStore'
@@ -44,7 +43,6 @@ const App = () => (
                 <Route path="/users" element={<Users />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/search" element={<Search />} />
-                <Route path="/dre" element={<Dre />} />
                 <Route path="/valuation" element={<Valuation />} />
                 <Route path="/budgets" element={<Budgets />} />
               </Route>

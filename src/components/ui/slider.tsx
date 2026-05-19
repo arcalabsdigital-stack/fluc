@@ -1,4 +1,3 @@
-/* Slider Component - A component that displays a slider (a component that displays a range of values) - from shadcn/ui (exposes Slider) */
 import * as React from 'react'
 import * as SliderPrimitive from '@radix-ui/react-slider'
 
