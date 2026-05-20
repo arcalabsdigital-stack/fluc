@@ -58,7 +58,7 @@ const plans = [
     popular: true,
   },
   {
-    id: 'Patrimonio',
+    id: 'Patrimônio',
     name: 'Patrimônio',
     description: 'Para empresas em crescimento',
     priceMensal: 199.9,
