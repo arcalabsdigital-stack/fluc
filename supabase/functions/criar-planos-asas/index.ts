@@ -10,9 +10,7 @@ Deno.serve(async (req) => {
   try {
     const ASAAS_API_KEY = Deno.env.get('ASAAS_API_KEY')
     if (!ASAAS_API_KEY) {
-      throw new Error(
-        'A chave da API (ASAAS_API_KEY) não está configurada nos segredos.',
-      )
+      throw new Error('A chave da API (ASAAS_API_KEY) não está configurada nos segredos.')
     }
 
     const authHeader = req.headers.get('Authorization')
@@ -32,7 +30,7 @@ Deno.serve(async (req) => {
       data: { user },
       error: userError,
     } = await supabaseClient.auth.getUser()
-
+    
     if (userError || !user) throw new Error('Não autorizado.')
 
     const { data: profile } = await supabaseClient
@@ -51,19 +49,19 @@ Deno.serve(async (req) => {
       {
         name: 'Fluxo',
         description: 'Ideal para começar',
-        amount: 49.9,
+        amount: 49.90,
         interval: 'MENSAL',
       },
       {
         name: 'Lucro',
         description: 'Mais popular',
-        amount: 89.9,
+        amount: 89.90,
         interval: 'MENSAL',
       },
       {
         name: 'Patrimônio',
         description: 'Para empresas em crescimento',
-        amount: 199.9,
+        amount: 199.90,
         interval: 'MENSAL',
       },
     ]
@@ -136,7 +134,7 @@ Deno.serve(async (req) => {
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      },
+      }
     )
   } catch (error: any) {
     console.error('Erro na Edge Function criar-planos-asas:', error)
